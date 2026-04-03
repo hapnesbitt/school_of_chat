@@ -1,0 +1,22 @@
+# =============================================================================
+# School of Chat — docker-compose.yml
+# Frontend only (backend + Redis run natively)
+# =============================================================================
+name: school-of-chat
+
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend
+      args:
+        NEXTAUTH_URL: ${NEXTAUTH_URL:-https://soc.arc-codex.com}
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-https://soc.arc-codex.com}
+    image: soc-frontend:latest
+    container_name: soc-frontend
+    network_mode: host
+    env_file: ./frontend/.env.local
+    restart: unless-stopped
+    healthcheck:
+      disable: true

@@ -1,0 +1,37 @@
+lessons:
+  - slug: opening-act
+    number: 1
+    title: "The Opening Act"
+    tagline: "Every rock legend starts somewhere."
+    difficulty: beginner
+    challenge: |
+      Write a prompt that gets Claude to explain how electric guitars make sound —
+      to a curious 8-year-old who has never touched one.
+    instructions: |
+      A great prompt is like a great song intro. It sets the vibe, tells the
+      performer exactly what you need, and leaves no room for confusion.
+
+      Things to think about before you write:
+      — Who is your audience? (You should tell Claude.)
+      — What exactly needs explaining?
+      — Should there be analogies? How long? What tone?
+
+      There's no single right answer. But there are definitely better and worse ones.
+    rubric:
+      - criterion: Audience specified in the prompt
+        points: 20
+        hint: Did you tell Claude this is for an 8-year-old?
+      - criterion: Analogy present in the output
+        points: 20
+        hint: Did the output use a real-world comparison a kid would recognise?
+      - criterion: Age-appropriate language throughout
+        points: 20
+        hint: Would an actual 8-year-old understand every sentence?
+      - criterion: Physically accurate explanation
+        points: 20
+        hint: Is the underlying science correct?
+      - criterion: Engaging and fun to read
+        points: 20
+        hint: Would a kid actually want to finish reading this?
+    model: claude-haiku-4-5-20251001
+    max_tokens: 400
