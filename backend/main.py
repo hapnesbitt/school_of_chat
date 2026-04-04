@@ -117,6 +117,7 @@ def list_courses():
             "description":  c["description"],
             "icon":         c["icon"],
             "tier":         c.get("tier", 1),
+            "lesson_type":  c.get("lesson_type", ""),
             "lesson_count": len(c["lessons"]),
         }
         for c in COURSES
@@ -134,6 +135,7 @@ def get_course(course_slug: str):
         "tagline":     course["tagline"],
         "description": course["description"],
         "icon":        course["icon"],
+        "lesson_type": course.get("lesson_type", ""),
         "lessons": [
             {
                 "slug":        l["slug"],
@@ -296,6 +298,49 @@ def get_certificate(user_id: str, course_slug: str):
     if not course:
         return jsonify({"error": "Course not found"}), 404
 
+    # ── Dynamic course: certificate based on article passes ──────────────────
+    if course.get("lesson_type") == "dynamic":
+        raw_passes = r.hgetall(f"soc:dynamic_pass:{user_id}")
+        passed = []
+        for art_id, val in raw_passes.items():
+            try:
+                d = json.loads(val)
+                if d.get("pct", 0) >= CERTIFICATE_THRESHOLD_SCORE:
+                    passed.append({
+                        "slug":  art_id,
+                        "title": d.get("title", art_id),
+                        "score": d.get("score", 0),
+                        "max":   100,
+                        "pct":   d.get("pct", 0),
+                    })
+            except Exception:
+                pass
+        if len(passed) < CERTIFICATE_THRESHOLD_COUNT:
+            return jsonify({
+                "eligible":     False,
+                "course_slug":  course_slug,
+                "course_title": course["title"],
+                "passed_count": len(passed),
+                "needed":       CERTIFICATE_THRESHOLD_COUNT,
+            })
+        date_key  = f"soc:cert_issued:{user_id}:{course_slug}"
+        issued_at = r.get(date_key)
+        if not issued_at:
+            issued_at = time.strftime("%Y-%m-%d")
+            r.set(date_key, issued_at)
+        name = r.get(f"soc:name:{user_id}") or ""
+        return jsonify({
+            "eligible":     True,
+            "user_id":      user_id,
+            "course_slug":  course_slug,
+            "course_title": course["title"],
+            "name":         name,
+            "issued_at":    issued_at,
+            "passed":       passed[:CERTIFICATE_THRESHOLD_COUNT],
+            "passed_count": len(passed),
+        })
+
+    # ── Static course: certificate based on lesson scores ─────────────────
     course_lesson_slugs = {l["slug"] for l in course["lessons"]}
     passed = []
 
@@ -496,6 +541,283 @@ def _save_progress(user_id: str, slug: str, prompt: str, output: str, job: dict)
         ],
     }), ex=90 * 24 * 3600)
     r.sadd(f"soc:completed:{user_id}", slug)
+
+
+# ---------------------------------------------------------------------------
+# Dynamic course — Reading Comprehension
+# ---------------------------------------------------------------------------
+
+ARC_FEED_URL       = "https://arc-codex.com/api/get_feed"
+ARC_CACHE_TTL      = 1800          # 30 min article list cache
+ARC_QUESTIONS_TTL  = 86400         # 24 hr question cache per article
+ARC_TEXT_FOR_GEN   = 5000          # chars sent to Ollama for question gen
+ARC_TEXT_FOR_GRADE = 4000          # chars sent to Ollama per criterion
+
+
+def _fetch_arc_articles(limit: int = 24) -> list[dict]:
+    """Fetch articles from Arc Codex public feed. Redis-cached for 30 min."""
+    cache_key = f"soc:arc_feed_cache:{limit}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(ARC_FEED_URL, params={"limit": limit}, timeout=12)
+        resp.raise_for_status()
+        articles = resp.json()
+        if not isinstance(articles, list):
+            return []
+        # English only, must have readable text
+        filtered = [
+            a for a in articles
+            if (a.get("source_lang") or "en") == "en"
+            and len(a.get("original_text") or "") > 300
+        ][:limit]
+        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
+        return filtered
+    except Exception as exc:
+        app.logger.warning(f"[arc_feed] fetch failed: {exc}")
+        return []
+
+
+def _article_id(a: dict) -> str:
+    return str(a.get("id") or a.get("article_id") or "")
+
+
+@app.route("/api/dynamic/articles")
+def list_dynamic_articles():
+    articles = _fetch_arc_articles()
+    if not articles:
+        return jsonify({"error": "Could not reach Arc Codex feed"}), 503
+    summaries = []
+    for a in articles:
+        text = (a.get("original_text") or "").strip()
+        summaries.append({
+            "id":           _article_id(a),
+            "title":        (a.get("title") or "Untitled").strip(),
+            "source":       (a.get("source") or "").strip(),
+            "category":     (a.get("category") or "").strip(),
+            "published_at": (a.get("published_at") or a.get("created_at") or "").strip(),
+            "preview":      text[:220] + "…" if len(text) > 220 else text,
+            "word_count":   len(text.split()),
+        })
+    return jsonify(summaries)
+
+
+@app.route("/api/dynamic/article/<article_id>")
+def get_dynamic_article(article_id: str):
+    articles = _fetch_arc_articles()
+    article  = next((a for a in articles if _article_id(a) == article_id), None)
+    if not article:
+        return jsonify({"error": "Article not found"}), 404
+    text = (article.get("original_text") or "").strip()
+    return jsonify({
+        "id":           _article_id(article),
+        "title":        (article.get("title") or "Untitled").strip(),
+        "source":       (article.get("source") or "").strip(),
+        "category":     (article.get("category") or "").strip(),
+        "published_at": (article.get("published_at") or article.get("created_at") or "").strip(),
+        "text":         text,
+        "word_count":   len(text.split()),
+    })
+
+
+@app.route("/api/dynamic/questions/<article_id>", methods=["POST"])
+def generate_dynamic_questions(article_id: str):
+    """Generate 5 comprehension questions. Cached per article for 24 hr."""
+    cache_key = f"soc:dynamic:questions:{article_id}"
+    cached = r.get(cache_key)
+    if cached:
+        return jsonify(json.loads(cached))
+
+    articles = _fetch_arc_articles()
+    article  = next((a for a in articles if _article_id(a) == article_id), None)
+    if not article:
+        return jsonify({"error": "Article not found"}), 404
+
+    title = (article.get("title") or "Untitled").strip()
+    text  = (article.get("original_text") or "").strip()[:ARC_TEXT_FOR_GEN]
+
+    gen_prompt = f"""You are a reading comprehension instructor. Your job is to create exactly 5 questions that test whether a student has read and understood the following article.
+
+Rules:
+- Every question must be answerable ONLY by reading this specific article — not by general knowledge.
+- Questions should probe different aspects: key facts, cause-and-effect, implications, specific details.
+- Each question should require a 2–4 sentence answer.
+- Do not repeat the same point across multiple questions.
+
+Article title: {title}
+Article text:
+{text}
+
+Return ONLY a valid JSON array of exactly 5 objects. No markdown, no preamble, no explanation.
+Each object must have exactly two keys:
+  "question"  — the question to ask the student (1–2 sentences)
+  "criterion" — what a correct answer must demonstrate (1 sentence, used for grading)
+
+Example format:
+[
+  {{"question": "...", "criterion": "..."}},
+  {{"question": "...", "criterion": "..."}},
+  {{"question": "...", "criterion": "..."}},
+  {{"question": "...", "criterion": "..."}},
+  {{"question": "...", "criterion": "..."}}
+]"""
+
+    try:
+        raw, _ = _call_ollama(gen_prompt, timeout=120)
+        # Strip markdown fences if present
+        if raw.startswith("```"):
+            lines = raw.split("\n")
+            raw = "\n".join(lines[1:-1] if lines[-1].strip().startswith("```") else lines[1:])
+        # Extract JSON array (be tolerant of leading/trailing text)
+        m = re.search(r'\[.*\]', raw, re.DOTALL)
+        questions = json.loads(m.group() if m else raw.strip())
+        if not isinstance(questions, list) or len(questions) < 5:
+            raise ValueError(f"Expected list of 5, got {type(questions).__name__}({len(questions) if isinstance(questions,list) else '?'})")
+        questions = questions[:5]
+        result = {"article_id": article_id, "title": title, "questions": questions}
+        r.set(cache_key, json.dumps(result), ex=ARC_QUESTIONS_TTL)
+        return jsonify(result)
+    except Exception as exc:
+        app.logger.error(f"[dynamic_questions] {article_id}: {exc}")
+        return jsonify({"error": f"Question generation failed: {exc}"}), 500
+
+
+@app.route("/api/dynamic/submit", methods=["POST"])
+def submit_dynamic():
+    """Create a grading job for a dynamic reading-comprehension attempt."""
+    data       = request.get_json(force=True)
+    article_id = data.get("article_id", "")
+    questions  = data.get("questions", [])    # list of {question, criterion}
+    answers    = data.get("answers", [])
+    user_id    = data.get("user_id", "anonymous")
+
+    if not article_id or len(questions) != 5 or len(answers) != 5:
+        return jsonify({"error": "Requires article_id, 5 questions, 5 answers"}), 400
+
+    articles = _fetch_arc_articles()
+    article  = next((a for a in articles if _article_id(a) == article_id), None)
+    if not article:
+        return jsonify({"error": "Article not found"}), 404
+
+    article_title = (article.get("title") or "Untitled").strip()
+    article_text  = (article.get("original_text") or "").strip()[:ARC_TEXT_FOR_GRADE]
+
+    job_id   = str(uuid.uuid4())
+    criteria = [
+        {
+            "criterion":  (q.get("criterion") or q.get("question", ""))[:120],
+            "points":     20,
+            "status":     "pending",
+            "earned":     None,
+            "comment":    None,
+        }
+        for q in questions
+    ]
+    job = {
+        "job_id":         job_id,
+        "status":         "grading",
+        "criteria":       criteria,
+        "total_earned":   0,
+        "total_possible": 100,
+        "complete_count": 0,
+    }
+    _write_job(job_id, job)
+
+    threading.Thread(
+        target=_grade_dynamic_job,
+        args=(job_id, article_id, article_title, article_text, questions, answers, user_id),
+        daemon=True,
+    ).start()
+
+    return jsonify({"job_id": job_id})
+
+
+def _grade_dynamic_job(
+    job_id: str,
+    article_id: str,
+    article_title: str,
+    article_text: str,
+    questions: list[dict],
+    answers: list[str],
+    user_id: str,
+) -> None:
+    """Sequential per-question grading with article as context."""
+    for i, (q, answer) in enumerate(zip(questions, answers)):
+        question_text = q.get("question", "")
+        criterion     = q.get("criterion", "")
+
+        grade_prompt = f"""You are a reading comprehension instructor grading a student's answer.
+
+ARTICLE TITLE: {article_title}
+ARTICLE (excerpt — use this as the source of truth):
+{article_text}
+
+QUESTION: {question_text}
+WHAT THE ANSWER MUST DEMONSTRATE: {criterion}
+STUDENT'S ANSWER: {answer}
+
+Award 0–20 points:
+- 20: answer correctly references specific content from the article
+- 14–18: mostly correct, minor gaps or slight vagueness
+- 8–12: partially correct or too general
+- 0–6: wrong, blank, or answerable without reading the article
+
+Return ONLY valid JSON (no markdown, no extra text):
+{{"earned": <integer 0–20>, "comment": "<one sentence explaining the score>"}}"""
+
+        earned  = 0
+        comment = "Grading error."
+        try:
+            raw, _ = _call_ollama(grade_prompt, timeout=90)
+            if raw.startswith("```"):
+                lines = raw.split("\n")
+                raw = "\n".join(lines[1:-1] if lines[-1].strip().startswith("```") else lines[1:])
+            m = re.search(r'\{[^{}]+\}', raw, re.DOTALL)
+            result  = json.loads(m.group() if m else raw.strip())
+            earned  = max(0, min(20, int(result.get("earned", 0))))
+            comment = str(result.get("comment", "")).strip()[:300] or "No comment."
+        except Exception as exc:
+            app.logger.error(f"[grade_dynamic] {job_id} q{i}: {exc}")
+
+        raw_job = r.get(f"soc:job:{job_id}")
+        if not raw_job:
+            return
+        job = json.loads(raw_job)
+        job["criteria"][i]["status"]  = "complete"
+        job["criteria"][i]["earned"]  = earned
+        job["criteria"][i]["comment"] = comment
+        job["complete_count"] = sum(1 for c in job["criteria"] if c["status"] == "complete")
+        job["total_earned"]   = sum(c.get("earned") or 0 for c in job["criteria"])
+
+        if job["complete_count"] == 5:
+            job["status"] = "complete"
+            if user_id != "anonymous":
+                pct = round((job["total_earned"] / 100) * 100)
+                if pct >= 70:
+                    # Store article pass: hash field = article_id, value = JSON
+                    r.hset(
+                        f"soc:dynamic_pass:{user_id}",
+                        article_id,
+                        json.dumps({"score": job["total_earned"], "title": article_title, "pct": pct}),
+                    )
+
+        _write_job(job_id, job)
+        app.logger.info(f"[grade_dynamic] {job_id} q{i+1}/5 earned={earned}/20 total={job['total_earned']}")
+
+
+@app.route("/api/dynamic/progress/<user_id>")
+def get_dynamic_progress(user_id: str):
+    """Return passed articles for this user."""
+    raw = r.hgetall(f"soc:dynamic_pass:{user_id}")
+    passed = []
+    for article_id, val in raw.items():
+        try:
+            d = json.loads(val)
+            passed.append({"article_id": article_id, **d})
+        except Exception:
+            pass
+    return jsonify({"passed": passed, "passed_count": len(passed)})
 
 
 if __name__ == "__main__":

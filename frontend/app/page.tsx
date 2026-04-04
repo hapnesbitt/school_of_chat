@@ -8,6 +8,7 @@ interface Course {
     description: string;
     icon: string;
     tier: number;
+    lesson_type: string;
     lesson_count: number;
 }
 
@@ -104,7 +105,9 @@ export default async function HomePage() {
                                                     {course.tagline}
                                                 </p>
                                                 <p className="text-[11px] text-slate-600 mt-3 uppercase tracking-widest font-bold">
-                                                    {course.lesson_count} lessons · certificate available
+                                                    {course.lesson_type === "dynamic"
+                                                        ? "Browse articles · certificate available"
+                                                        : `${course.lesson_count} lessons · certificate available`}
                                                 </p>
                                             </div>
                                             <span aria-hidden="true" className="text-slate-600 group-hover:text-rock-yellow transition-colors shrink-0 mt-1">→</span>

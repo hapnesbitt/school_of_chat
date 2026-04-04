@@ -1853,3 +1853,20 @@ courses:
               the documentation habits you should maintain on an ongoing basis. Why is it
               important to document interactions where you said no, not just transactions that
               occurred?
+
+  # ============================================================
+  # COURSE 7 — Reading Comprehension (dynamic)
+  # ============================================================
+  - slug: reading-comprehension
+    title: "Reading Comprehension"
+    tagline: "Real articles. Ollama-generated questions. Actual understanding."
+    description: >
+      Browse live cybersecurity intelligence articles from Arc Codex.
+      Select one to read, then answer five questions Ollama generates
+      from the article. Pass three articles at 70% or above to earn
+      your certificate.
+    icon: "📰"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    lessons: []
