@@ -1,37 +1,1127 @@
-lessons:
-  - slug: opening-act
-    number: 1
-    title: "The Opening Act"
-    tagline: "Every rock legend starts somewhere."
+courses:
+
+  # ============================================================
+  # COURSE 1 — Prompt Engineering Fundamentals
+  # ============================================================
+  - slug: prompt-engineering-fundamentals
+    title: "Prompt Engineering Fundamentals"
+    tagline: "Learn to talk to AI like you mean it."
+    description: >
+      Five hands-on lessons covering the core techniques that separate
+      good prompts from bad ones. You write real prompts, see real outputs,
+      and get graded on what actually matters.
+    icon: "🎸"
+    lessons:
+
+      - slug: opening-act
+        number: 1
+        title: "The Opening Act"
+        tagline: "Every rock legend starts somewhere."
+        difficulty: beginner
+        lesson_type: prompt
+        challenge: |
+          Write a prompt that gets the AI to explain how electric guitars make sound —
+          to a curious 8-year-old who has never touched one.
+        instructions: |
+          A great prompt is like a great song intro. It sets the vibe, tells the
+          performer exactly what you need, and leaves no room for confusion.
+
+          Things to think about before you write:
+          — Who is your audience? (You should tell the AI.)
+          — What exactly needs explaining?
+          — Should there be analogies? How long? What tone?
+
+          There's no single right answer. But there are definitely better and worse ones.
+        rubric:
+          - criterion: Audience specified in the prompt
+            points: 20
+            hint: Did you tell the AI this is for an 8-year-old?
+            question: Paste the exact phrase in your prompt that specifies who the explanation is for.
+          - criterion: Analogy present in the output
+            points: 20
+            hint: Did the output use a real-world comparison a kid would recognise?
+            question: What analogy appeared in the output? Quote or describe it. Did your prompt request one explicitly?
+          - criterion: Age-appropriate language throughout
+            points: 20
+            hint: Would an actual 8-year-old understand every sentence?
+            question: Quote a sentence from the output that shows the language is pitched right. Why does it work for a kid?
+          - criterion: Physically accurate explanation
+            points: 20
+            hint: Is the underlying science correct?
+            question: How did the output explain the actual physics? Summarise the key mechanism it described — was it accurate?
+          - criterion: Engaging and fun to read
+            points: 20
+            hint: Would a kid actually want to finish reading this?
+            question: What specific element of the output makes it engaging for a child? Quote or describe the most effective part.
+        max_tokens: 400
+
+      - slug: context-is-king
+        number: 2
+        title: "Context is King"
+        tagline: "Tell the AI who it's dealing with."
+        difficulty: beginner
+        lesson_type: prompt
+        challenge: |
+          Write a prompt asking for advice on whether to quit your job to start a band.
+          But load it with context: your age, your financial situation, your music
+          experience, and what's actually holding you back.
+
+          The goal is to get personalised, specific advice — not a fortune cookie.
+        instructions: |
+          Context is the difference between a fortune cookie and actual advice.
+
+          Without context, the AI has to guess. With context, it can be specific.
+          The more relevant detail you give, the more useful the output.
+
+          Things to include:
+          — Age and life stage (early career? family commitments?)
+          — Financial situation (savings runway, income, dependents)
+          — Music experience level
+          — What the real fear is
+
+          Don't just add words. Add signal.
+        rubric:
+          - criterion: At least 3 pieces of personal context provided
+            points: 20
+            hint: Age, finances, experience, fears — did you include at least 3?
+            question: List the context details you included. Name at least 3 (e.g. age, savings, years of playing, specific fear).
+          - criterion: Response is personalised to the context given
+            points: 20
+            hint: Does the advice change based on the specifics you provided?
+            question: Give one specific example where the advice directly addressed a detail you provided. Quote or paraphrase it.
+          - criterion: Response addresses financial risk specifically
+            points: 20
+            hint: Does the output engage with the money angle you provided?
+            question: How did the output engage with the financial situation you described? Was it vague or specific?
+          - criterion: Response acknowledges emotional or personal dimension
+            points: 20
+            hint: Does it address what's actually at stake beyond money?
+            question: What personal or emotional factor did the output acknowledge? What did it say about it?
+          - criterion: Advice is actionable rather than generic
+            points: 20
+            hint: Could this advice apply to literally anyone, or is it tailored?
+            question: Give the most specific, actionable recommendation from the output. Would it apply to anyone, or only to your situation?
+        max_tokens: 500
+
+      - slug: persona-play
+        number: 3
+        title: "Persona Play"
+        tagline: "The model wears whatever mask you give it."
+        difficulty: beginner
+        lesson_type: prompt
+        challenge: |
+          Write a prompt that asks the AI to respond as a grizzled 1970s rock producer —
+          the kind who's seen it all, has no patience for excuses, but genuinely wants
+          you to succeed.
+
+          Give that character this task: critique the lyric —
+          "I walk alone down the road of life, carrying my heart like a knife."
+
+          The persona should come through in every sentence.
+        instructions: |
+          A persona prompt has two jobs: tell the AI *who* it is, and give it something
+          to actually do. Most people nail one and fumble the other.
+
+          To make the persona stick:
+          — Give it a name or clear archetype (not just "an expert")
+          — Give it a voice: formal? terse? profane? warm?
+          — Give it a backstory detail or two
+          — Give it an opinion — bland personas give bland answers
+
+          The task (critique the lyric) stays fixed. The persona is your variable.
+        rubric:
+          - criterion: Persona is specific and named or clearly described
+            points: 20
+            hint: '"Rock producer" alone is thin. Does your prompt add texture?'
+            question: Paste the part of your prompt that defines who the AI should be. How specific did you get?
+          - criterion: Persona voice is consistent throughout the response
+            points: 20
+            hint: Does it sound like the same character from first sentence to last?
+            question: Quote the sentence from the output that best captures the character's voice. Why does it work?
+          - criterion: Feedback engages with the actual lyric content
+            points: 20
+            hint: Does the response actually analyse the lyric, not just the concept?
+            question: What did the character say specifically about the lyric "carrying my heart like a knife"? Quote or summarise.
+          - criterion: Persona has a clear opinion (not wishy-washy)
+            points: 20
+            hint: Does the character take a stance, or hedge everything?
+            question: What was the character's verdict on the lyric? Positive, negative, or mixed — and how strongly stated?
+          - criterion: Response stays in character under pressure of critique
+            points: 20
+            hint: Does the character give real criticism without breaking the persona?
+            question: Did the persona stay consistent when delivering criticism? Give an example of where it held or broke.
+        max_tokens: 450
+
+      - slug: iteration-game
+        number: 4
+        title: "The Iteration Game"
+        tagline: "Your first prompt is never your best one."
+        difficulty: intermediate
+        lesson_type: prompt
+        challenge: |
+          Rewrite this weak prompt into something sharp and specific:
+
+          WEAK: "Write something about climate change."
+
+          You decide the format, audience, angle, and length constraints.
+          Submit your improved version. The grader will assess how well you
+          addressed what made the original weak.
+        instructions: |
+          "Write something about climate change" fails on every dimension:
+          — No format (essay? tweet? poem? briefing?)
+          — No audience (scientist? child? politician?)
+          — No angle (cause? solutions? local impact? economics?)
+          — No length or scope
+          — No tone
+
+          Your rewrite should fix at least four of those. The goal isn't a longer
+          prompt — it's a sharper one. A 30-word prompt that's specific beats a
+          200-word one that isn't.
+        rubric:
+          - criterion: Format explicitly specified
+            points: 20
+            hint: Did you say what kind of writing you want (essay, list, brief, etc.)?
+            question: What format did you request? Paste the instruction from your prompt that specifies it.
+          - criterion: Target audience identified
+            points: 20
+            hint: Does your prompt say who this is for?
+            question: Who did you write this for? Quote your audience specification from the prompt.
+          - criterion: Specific angle or argument scoped
+            points: 20
+            hint: Did you narrow "climate change" to a specific aspect or argument?
+            question: What specific aspect of climate change did you focus on? Quote your angle from the prompt.
+          - criterion: Length or scope constrained
+            points: 20
+            hint: Did you give the model a sense of how long or detailed to be?
+            question: How did you constrain scope or length? Quote the constraint from your prompt.
+          - criterion: Output is genuinely useful for the stated purpose
+            points: 20
+            hint: Would a real person use this output for the stated goal?
+            question: Who would realistically use this output, and what would they do with it? Be specific — not just "anyone interested in climate."
+        max_tokens: 500
+
+      - slug: chain-of-thought
+        number: 5
+        title: "Chain of Thought"
+        tagline: "Ask it to show its working."
+        difficulty: intermediate
+        lesson_type: prompt
+        challenge: |
+          Write a prompt that solves this problem — but requires the AI to show
+          its reasoning step by step before giving a final answer:
+
+          A band has 4 members. They earn £12,000 from a tour.
+          The drummer gets a 25% bonus because she owns the van.
+          The remaining amount is split equally.
+          How much does each person take home?
+
+          Your prompt must explicitly instruct the model to reason through it.
+          The answer alone gets no credit.
+        instructions: |
+          Chain-of-thought (CoT) prompting is one of the most powerful techniques
+          in the toolkit. By asking the model to reason before concluding, you
+          dramatically reduce errors on multi-step problems.
+
+          The magic phrase isn't magic — it's explicit permission:
+          — "Think through this step by step before answering"
+          — "Show your working"
+          — "Reason out loud, then give your final answer"
+
+          What you're graded on: did your prompt actually produce visible reasoning,
+          or did it just produce a number? The process is the point.
+        rubric:
+          - criterion: Prompt explicitly requests step-by-step reasoning
+            points: 20
+            hint: Does your prompt contain an instruction to reason before answering?
+            question: Paste the exact phrase you used to request step-by-step reasoning from the AI.
+          - criterion: Response shows intermediate calculation steps
+            points: 20
+            hint: Can you follow the working, or does the answer just appear?
+            question: Quote one intermediate calculation step from the output — something between the problem statement and the final answer.
+          - criterion: Drummer bonus calculated correctly in the reasoning
+            points: 20
+            hint: Is £3,000 (25% of £12,000) identified as the bonus?
+            question: What did the output calculate as the drummer's bonus? Show the exact working it used.
+          - criterion: Remaining split calculated correctly
+            points: 20
+            hint: Is £9,000 / 4 = £2,250 shown and correct?
+            question: How did the output calculate each remaining member's share? Quote the working.
+          - criterion: Final answer clearly separated from the working
+            points: 20
+            hint: Does the response distinguish "here's my reasoning" from "here's the answer"?
+            question: How did the output present the final answer as distinct from the reasoning? Quote the final answer section.
+        max_tokens: 500
+
+  # ============================================================
+  # COURSE 2 — GMP Essentials
+  # ============================================================
+  - slug: gmp-essentials
+    title: "GMP Essentials"
+    tagline: "The rules that keep medicines safe."
+    description: >
+      Five lessons covering the fundamentals of Good Manufacturing Practice.
+      No multiple choice — you write real answers to real questions and get
+      graded on accuracy, depth, and understanding.
+    icon: "🏭"
+    lessons:
+
+      - slug: gmp-what-is-gmp
+        number: 1
+        title: "What is GMP?"
+        tagline: "The foundation everything else is built on."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          In your own words, explain what Good Manufacturing Practice (GMP) is,
+          who it applies to, and why it was developed.
+
+          Imagine you are explaining it to a new colleague on their first day
+          in a pharmaceutical company. They are smart but have no prior GMP knowledge.
+        instructions: |
+          GMP is a system of controls applied to manufacturing to ensure products
+          are consistently produced and controlled to the quality standards
+          appropriate for their intended use.
+
+          Think about:
+          — Why GMP was developed (what went wrong historically)
+          — Which industries and product types it covers
+          — Who creates and enforces the regulations
+          — What the core principles are
+          — What the consequences of non-compliance look like
+        rubric:
+          - criterion: Core definition is accurate
+            points: 20
+            hint: Does the answer correctly define GMP and its fundamental purpose?
+            question: Write your definition of GMP in 2–3 sentences. What is it, and what does it aim to achieve?
+          - criterion: Scope correctly identified
+            points: 20
+            hint: Does the answer identify which industries or product types GMP applies to?
+            question: Which industries or product types does GMP apply to? Name at least 3.
+          - criterion: Historical rationale and patient safety
+            points: 20
+            hint: Does the answer explain why GMP was developed, with reference to safety consequences?
+            question: Why was GMP developed? What problem does it solve? Mention a historical event or consequence that drove its creation.
+          - criterion: Regulatory framework referenced
+            points: 20
+            hint: Does the answer name regulatory bodies or guidelines that set GMP standards?
+            question: Name at least two regulatory authorities or guidelines (e.g. FDA, EMA, ICH Q10) that set or enforce GMP. What do they govern?
+          - criterion: Core GMP principles identified
+            points: 20
+            hint: Does the answer identify at least 3 of the core GMP pillars?
+            question: What are the core principles or pillars of GMP? Name and briefly describe at least 3 (e.g. personnel, documentation, premises, equipment, production, QC).
+
+      - slug: gmp-documentation
+        number: 2
+        title: "Documentation"
+        tagline: "If it wasn't written down, it didn't happen."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          GMP's most important principle is often quoted as:
+          "If it wasn't written down, it didn't happen."
+
+          Explain what this means in practice, what kinds of documents GMP requires,
+          and what the consequences of poor documentation are — for the patient,
+          the company, and the regulator.
+        instructions: |
+          Documentation in GMP serves two purposes: it proves that processes were
+          followed correctly, and it enables investigation and traceability if
+          something goes wrong.
+
+          Think about:
+          — Batch records, SOPs, logbooks, change control documents, deviation reports
+          — ALCOA+ principles (the gold standard for data integrity)
+          — What "contemporaneous" recording means and why it matters
+          — What regulators look for during an inspection
+          — The difference between a transcription error and falsification
+        rubric:
+          - criterion: Core documentation principle understood
+            points: 20
+            hint: Does the answer capture what "written down" means in the GMP context, and why?
+            question: In your own words, explain why "if it wasn't written down, it didn't happen" is fundamental to GMP. What does it mean in day-to-day practice?
+          - criterion: Key document types identified
+            points: 20
+            hint: Does the answer list at least 4 distinct GMP document types with their purpose?
+            question: Name at least 4 types of documents required in a GMP environment (e.g. SOPs, batch manufacturing records). What is each one used for?
+          - criterion: ALCOA or data integrity principles explained
+            points: 20
+            hint: Does the answer address ALCOA, ALCOA+, or data integrity requirements accurately?
+            question: What does ALCOA (or ALCOA+) stand for? Explain at least 3 of its principles and why each one matters for GMP records.
+          - criterion: Consequences of poor documentation described
+            points: 20
+            hint: Does the answer explain specific consequences — regulatory, safety, or operational?
+            question: What are the consequences of poor documentation in a GMP environment? Give at least 2 specific examples (regulatory action, product recall, patient harm, etc.).
+          - criterion: Good documentation practice described
+            points: 20
+            hint: Does the answer describe correct habits including error correction?
+            question: Describe at least 3 principles of good documentation practice (GDP). What is the correct way to correct an error in a GMP record — and what must never be done?
+
+      - slug: gmp-contamination-control
+        number: 3
+        title: "Contamination Control"
+        tagline: "Keeping the product — and the patient — safe."
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          Pharmaceutical contamination is one of the most serious risks in
+          GMP manufacturing. Describe the main types of contamination, explain
+          how they can occur, and outline the key GMP controls that prevent them.
+        instructions: |
+          Contamination in pharmaceuticals can be physical (particles, glass),
+          chemical (cleaning agents, lubricants), microbiological (bacteria, mould),
+          or cross-contamination from other products.
+
+          Think about:
+          — Clean room classifications (EU GMP Annex 1, ISO)
+          — Gowning requirements and personnel as a contamination source
+          — Environmental monitoring programmes
+          — Cleaning validation and its requirements
+          — Cross-contamination controls in multi-product facilities
+        rubric:
+          - criterion: Contamination types correctly identified
+            points: 20
+            hint: Does the answer correctly identify physical, chemical, microbiological, and cross-contamination?
+            question: List the main types of contamination in pharmaceutical manufacturing. Give one practical example of each type.
+          - criterion: Facility and environmental controls described
+            points: 20
+            hint: Does the answer cover clean room classification or environmental monitoring accurately?
+            question: How do facility design and environmental monitoring programmes prevent contamination? Mention clean room classifications or grades if you know them.
+          - criterion: Personnel as a contamination source addressed
+            points: 20
+            hint: Does the answer address personnel hygiene, gowning, and behaviour controls?
+            question: How can personnel introduce contamination into a manufacturing area? What GMP controls address this — describe gowning requirements or hygiene expectations.
+          - criterion: Cleaning and cleaning validation explained
+            points: 20
+            hint: Does the answer correctly explain what cleaning validation is and what it must demonstrate?
+            question: What is cleaning validation, and why is it required in GMP? What does a cleaning validation programme need to demonstrate?
+          - criterion: Cross-contamination prevention described
+            points: 20
+            hint: Does the answer give at least 2 specific controls for preventing cross-contamination between products?
+            question: What is cross-contamination, and how is it prevented in a facility that manufactures more than one product? Give at least 2 specific engineering or procedural controls.
+
+      - slug: gmp-equipment-facilities
+        number: 4
+        title: "Equipment and Facilities"
+        tagline: "Qualified, calibrated, and fit for purpose."
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          GMP places strict requirements on the equipment and facilities used in
+          pharmaceutical manufacturing. Explain the qualification lifecycle for
+          equipment and the key facility design principles that support GMP compliance.
+        instructions: |
+          Equipment qualification follows a lifecycle: Design Qualification (DQ),
+          Installation Qualification (IQ), Operational Qualification (OQ), and
+          Performance Qualification (PQ). Ongoing compliance requires calibration,
+          preventive maintenance, and change control.
+
+          For facilities, think about:
+          — Segregation and material flow to prevent mix-ups and contamination
+          — HVAC design (pressure differentials, air changes, temperature/humidity)
+          — Drainage, surfaces, and cleanability
+          — Utility qualification (purified water, compressed air, steam)
+        rubric:
+          - criterion: Qualification stages correctly described
+            points: 20
+            hint: Does the answer correctly describe DQ, IQ, OQ, and PQ and what each verifies?
+            question: Describe the four stages of equipment qualification — DQ, IQ, OQ, and PQ. What does each stage verify, and in what order do they occur?
+          - criterion: Calibration requirements explained
+            points: 20
+            hint: Does the answer explain what calibration is and why it is required in GMP?
+            question: What is calibration in the GMP context, and why is it required? What should happen if a critical instrument is found to be out of calibration?
+          - criterion: Facility design principles covered
+            points: 20
+            hint: Does the answer cover at least 3 GMP facility design considerations accurately?
+            question: What are the key design principles for a GMP manufacturing facility? Include at least 3 considerations — think about separation, material flow, HVAC, surfaces, or drainage.
+          - criterion: Change control explained
+            points: 20
+            hint: Does the answer explain what change control is and why it matters for qualified equipment?
+            question: What is change control, and why is it critical for GMP equipment and facilities? What must happen before a modified piece of equipment is used in production?
+          - criterion: Cleaning validation for equipment addressed
+            points: 20
+            hint: Does the answer explain cleaning validation requirements for manufacturing equipment?
+            question: What must a cleaning validation programme for manufacturing equipment demonstrate? Name at least 3 parameters or tests it typically covers.
+
+      - slug: gmp-audits-compliance
+        number: 5
+        title: "Audits and Compliance"
+        tagline: "Verification, deviation, and the culture of quality."
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          GMP compliance doesn't police itself. Describe the main types of GMP
+          audits and inspections, explain how deviations and non-conformances are
+          managed, and outline what happens when a regulatory inspection finds
+          serious failures.
+        instructions: |
+          Audits can be internal (self-inspection), supplier/vendor, or regulatory
+          (conducted by authorities such as the MHRA, FDA, or EMA).
+
+          Non-conformances trigger a formal process: deviation report, root cause
+          analysis, and CAPA (Corrective and Preventive Action).
+
+          Serious regulatory findings lead to warning letters, import alerts, or
+          manufacturing licence suspension. Behind all of this is "quality culture" —
+          the attitudes and behaviours that determine whether GMP is lived or just
+          documented.
+        rubric:
+          - criterion: Audit types correctly identified
+            points: 20
+            hint: Does the answer describe internal, supplier, and regulatory audits and their distinct purposes?
+            question: Describe the three main types of GMP audit — internal, supplier, and regulatory. What is the purpose of each, and who conducts them?
+          - criterion: Deviation management process described
+            points: 20
+            hint: Does the answer explain the steps from deviation detection through to closure?
+            question: What is a deviation in a GMP context? Describe the typical steps taken when a deviation occurs — from initial detection through investigation to formal closure.
+          - criterion: CAPA correctly explained
+            points: 20
+            hint: Does the answer correctly distinguish corrective from preventive action with examples?
+            question: What does CAPA stand for? Explain the difference between a corrective action and a preventive action, and give one example of each.
+          - criterion: Regulatory consequences described
+            points: 20
+            hint: Does the answer name at least 2 specific regulatory actions that can follow a failed inspection?
+            question: What regulatory actions can follow a failed GMP inspection? Name and briefly describe at least 2 (e.g. warning letters, import alerts, licence suspension).
+          - criterion: Quality culture articulated
+            points: 20
+            hint: Does the answer go beyond procedure-following to address the human and organisational dimension?
+            question: Why is "quality culture" considered essential for sustainable GMP compliance? What distinguishes a genuine quality culture from a box-ticking approach?
+
+  # ============================================================
+  # COURSE 3 — Security+ Readiness
+  # ============================================================
+  - slug: security-plus-readiness
+    title: "Security+ Readiness"
+    tagline: "Prep for the most popular entry-level security certification."
+    description: >
+      Five lessons covering the core CompTIA Security+ domains. No memorising
+      definitions — you explain concepts, walk through scenarios, and justify
+      decisions. Graded by AI on accuracy, depth, and practical reasoning.
+    icon: "🛡️"
+    lessons:
+
+      - slug: secplus-threats-vulnerabilities
+        number: 1
+        title: "Threats and Vulnerabilities"
+        tagline: "Know your enemy before you can defend against them."
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          Security+ expects you to identify, classify, and reason about threats
+          and vulnerabilities — not just name them.
+
+          Answer the five questions below. For each one, go beyond definitions:
+          explain the mechanism, give an example, or describe what a defender
+          should do in response.
+        instructions: |
+          Key areas this lesson covers:
+          — Malware categories: virus, worm, trojan, ransomware, rootkit, spyware, keylogger, fileless
+          — Social engineering: phishing, spear phishing, vishing, whaling, pretexting, baiting, tailgating
+          — Attack types: active vs passive, DoS/DDoS, MITM, injection, privilege escalation
+          — Vulnerability concepts: CVEs, zero-days, patch management, vulnerability scanning vs pen testing
+          — Threat actors: script kiddies, insiders, APTs, hacktivists, nation-states
+        rubric:
+          - criterion: Malware types correctly distinguished
+            points: 20
+            hint: Does the answer accurately explain the differences between malware categories, not just list names?
+            question: >
+              Explain the difference between a virus, a worm, and a trojan. Then describe ransomware:
+              how does it work mechanically, and why has it become so prevalent as an attack vector?
+          - criterion: Social engineering techniques explained with mechanism
+            points: 20
+            hint: Does the answer explain why social engineering works, not just what the techniques are named?
+            question: >
+              Describe phishing, spear phishing, and pretexting. For each one, explain what makes it
+              effective against its target — what psychological or situational factor does the attacker exploit?
+          - criterion: Active vs passive attacks distinguished with examples
+            points: 20
+            hint: Does the answer correctly distinguish the two categories and give accurate examples of each?
+            question: >
+              Explain the difference between an active attack and a passive attack. Give two real examples
+              of each, and explain why passive attacks are often harder to detect.
+          - criterion: Vulnerability lifecycle understood
+            points: 20
+            hint: Does the answer correctly explain CVEs, zero-days, and the role of patch management?
+            question: >
+              What is a zero-day vulnerability, and why is it particularly dangerous? Describe the
+              window of exposure between a vulnerability being discovered and a patch being applied —
+              what should an organisation do during that window?
+          - criterion: Threat actor types and motivations identified
+            points: 20
+            hint: Does the answer name at least 3 distinct threat actor types with accurate motivations?
+            question: >
+              Describe at least three types of threat actors (e.g. script kiddies, insiders, APTs,
+              nation-states). For each, explain their typical motivation and the type of attack they
+              are most likely to carry out.
+
+      - slug: secplus-network-security
+        number: 2
+        title: "Network Security"
+        tagline: "The perimeter is dead. Understand what replaced it."
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          Network security is one of the largest Security+ domains. You need to
+          understand not just what tools exist, but when and why to use them —
+          and what the tradeoffs are.
+
+          Answer the five questions below with explanation and reasoning.
+        instructions: |
+          Key areas this lesson covers:
+          — Firewall types: packet-filtering, stateful inspection, NGFW, WAF, proxy
+          — VPNs: IPSec (tunnel/transport mode), SSL/TLS VPN, split tunnelling
+          — Network segmentation: DMZ, VLANs, microsegmentation
+          — Insecure vs secure protocols: Telnet→SSH, HTTP→HTTPS, FTP→SFTP, SNMPv1→v3
+          — Intrusion detection and prevention: IDS vs IPS, signature vs anomaly-based
+          — Network Access Control, honeypots, network hardening
+        rubric:
+          - criterion: Firewall types correctly compared
+            points: 20
+            hint: Does the answer accurately distinguish stateful from stateless and explain when each is appropriate?
+            question: >
+              Explain the difference between a stateless (packet-filtering) firewall and a stateful
+              inspection firewall. Give a scenario where a stateless firewall would miss a threat
+              that a stateful firewall would catch.
+          - criterion: VPN architecture understood
+            points: 20
+            hint: Does the answer correctly explain IPSec vs SSL VPN and identify a relevant use case for each?
+            question: >
+              Compare IPSec VPN and SSL/TLS VPN. In what scenarios would you choose one over the other?
+              Also explain what split tunnelling is and describe the security tradeoff it creates.
+          - criterion: Network segmentation purpose and design explained
+            points: 20
+            hint: Does the answer correctly explain DMZ architecture and why segmentation improves security posture?
+            question: >
+              Explain what a DMZ is and draw the logical architecture in words (what sits where, what
+              can reach what). Why does placing public-facing servers in a DMZ improve security compared
+              to putting them directly on the internal network?
+          - criterion: Protocol vulnerabilities identified with secure replacements
+            points: 20
+            hint: Does the answer correctly identify at least 2 insecure protocols, explain why they are insecure, and name their replacements?
+            question: >
+              Name two network protocols that are considered insecure and should be replaced in a
+              hardened environment. For each, explain specifically what the security weakness is
+              (not just "it sends data in plain text" — what can an attacker actually do with that?)
+              and name the secure alternative.
+          - criterion: IDS vs IPS distinction and detection methods explained
+            points: 20
+            hint: Does the answer correctly distinguish IDS from IPS and explain signature vs anomaly detection with tradeoffs?
+            question: >
+              Explain the difference between an IDS and an IPS in terms of what each does when
+              it detects suspicious traffic. Then explain the difference between signature-based
+              and anomaly-based detection — what is the key weakness of each approach?
+
+      - slug: secplus-iam
+        number: 3
+        title: "Identity and Access Management"
+        tagline: "Who are you, what can you touch, and how do we know?"
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          IAM is one of the most operationally important Security+ domains. Nearly
+          every breach involves a compromised identity or misconfigured access control.
+
+          Answer the five questions below. Focus on the "why" and "what goes wrong"
+          rather than just describing what things are.
+        instructions: |
+          Key areas this lesson covers:
+          — Authentication factors: something you know, have, are, somewhere you are
+          — MFA, SSO, federation (SAML, OAuth, OIDC)
+          — Access control models: DAC, MAC, RBAC, ABAC
+          — Least privilege, need-to-know, separation of duties, dual control
+          — Account lifecycle: provisioning, review, offboarding
+          — Directory services: LDAP, Active Directory
+          — Credential attacks: password spraying, credential stuffing, pass-the-hash
+        rubric:
+          - criterion: Authentication factors explained with examples
+            points: 20
+            hint: Does the answer correctly describe all three (or four) factors with concrete examples?
+            question: >
+              Describe the three classic authentication factors — something you know, something you have,
+              and something you are — with a concrete example of each. Then explain why combining two
+              factors from different categories is more secure than using two from the same category.
+          - criterion: MFA value explained through attack scenario
+            points: 20
+            hint: Does the answer explain concretely how MFA stops a specific attack, not just that "it adds a layer"?
+            question: >
+              An attacker has stolen a user's password through a phishing email. Walk through exactly
+              what happens next if the account has MFA enabled versus no MFA. What specific actions
+              does the attacker need to take to succeed despite MFA — and which MFA methods are weaker
+              against those attacks?
+          - criterion: Access control models compared with use cases
+            points: 20
+            hint: Does the answer accurately describe DAC, MAC, and RBAC with appropriate real-world contexts?
+            question: >
+              Compare Discretionary Access Control (DAC), Mandatory Access Control (MAC), and
+              Role-Based Access Control (RBAC). For each one, describe a real-world environment
+              where it would be the most appropriate model and explain why.
+          - criterion: Least privilege implications understood
+            points: 20
+            hint: Does the answer explain least privilege and give a concrete example of what breaks without it?
+            question: >
+              Explain the principle of least privilege. Describe a specific, realistic scenario where
+              failing to enforce least privilege leads to a security incident — walk through what
+              happens step by step.
+          - criterion: Account offboarding process described
+            points: 20
+            hint: Does the answer cover the key steps of offboarding and explain the risk of skipping them?
+            question: >
+              A developer leaves a company. Describe the account offboarding steps that should occur
+              on their last day and in the following week. What specific risks exist if each step is
+              skipped or delayed?
+
+      - slug: secplus-cryptography
+        number: 4
+        title: "Cryptography"
+        tagline: "The mathematics that keeps secrets secret."
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          Cryptography questions on Security+ go beyond "AES is symmetric." You need
+          to understand when and why to use different approaches, how PKI works end to
+          end, and the difference between encryption and hashing.
+
+          Answer the five questions below with enough depth to show understanding,
+          not just memorisation.
+        instructions: |
+          Key areas this lesson covers:
+          — Symmetric encryption: AES, DES/3DES, key exchange problem
+          — Asymmetric encryption: RSA, ECC, Diffie-Hellman, public/private key pairs
+          — Hybrid encryption (TLS uses both — why)
+          — Hashing: SHA-2/SHA-3, MD5 (broken), purpose vs encryption
+          — PKI: CA hierarchy, certificate chain, CRL, OCSP, certificate types
+          — Digital signatures: signing with private key, verifying with public key
+          — Common attacks: brute force, birthday attack, collision, downgrade
+        rubric:
+          - criterion: Symmetric vs asymmetric correctly explained with use cases
+            points: 20
+            hint: Does the answer correctly explain both approaches and identify where each is used in practice?
+            question: >
+              Explain the fundamental difference between symmetric and asymmetric encryption.
+              Why is asymmetric encryption not used to encrypt large files directly? Describe
+              how TLS solves this by combining both approaches.
+          - criterion: PKI trust chain explained end to end
+            points: 20
+            hint: Does the answer correctly trace the chain from root CA to end-entity certificate?
+            question: >
+              Explain how a PKI certificate chain works, starting from the root Certificate Authority
+              down to the certificate a web server presents. When your browser connects to a website
+              over HTTPS, how does it verify the certificate is trustworthy? What happens if the
+              certificate is expired or the issuing CA is not trusted?
+          - criterion: Hashing vs encryption distinction clear
+            points: 20
+            hint: Does the answer correctly explain that hashing is one-way and identify appropriate use cases for each?
+            question: >
+              Explain the conceptual difference between hashing and encryption. A developer suggests
+              storing user passwords by encrypting them with AES. Explain why this is worse than
+              hashing them, and describe what additional protection a salt provides.
+          - criterion: Algorithm selection reasoning demonstrated
+            points: 20
+            hint: Does the answer correctly explain what each algorithm is used for and why key/hash length matters?
+            question: >
+              For each of the following, state what it is used for and explain one key security
+              property or limitation: AES-256, RSA-2048, SHA-256, MD5. Why is MD5 no longer
+              considered secure for integrity verification?
+          - criterion: Digital signatures explained with non-repudiation
+            points: 20
+            hint: Does the answer correctly describe how a digital signature is created and verified, and link it to non-repudiation?
+            question: >
+              Explain step by step how a digital signature is created and verified — which key signs,
+              which key verifies, and what is actually being signed. How does this provide
+              non-repudiation, and what would an attacker need to forge a signature?
+
+      - slug: secplus-incident-response
+        number: 5
+        title: "Incident Response"
+        tagline: "When something goes wrong — and it will — what do you do?"
+        difficulty: intermediate
+        lesson_type: knowledge
+        challenge: |
+          Incident response is tested heavily on Security+. You need to know the
+          phases, understand forensic principles, and be able to reason through
+          real scenarios under pressure.
+
+          Answer the five questions below. Several of them present scenarios —
+          walk through your reasoning, not just the textbook answer.
+        instructions: |
+          Key areas this lesson covers:
+          — IR lifecycle: Preparation, Identification, Containment, Eradication, Recovery, Lessons Learned
+          — Containment strategies: isolate vs monitor, network segmentation, preserving evidence
+          — Digital forensics: chain of custody, order of volatility, write blockers, disk imaging
+          — Evidence types: volatile (RAM, running processes, network connections) vs non-volatile (disk)
+          — Log analysis, SIEM, indicators of compromise (IoCs)
+          — Communication: internal escalation, legal, regulatory notification obligations
+          — Post-incident review: root cause, timeline reconstruction, control improvements
+        rubric:
+          - criterion: IR lifecycle phases described accurately
+            points: 20
+            hint: Does the answer describe all six phases with what happens in each, not just name them?
+            question: >
+              Describe all six phases of the incident response lifecycle — Preparation, Identification,
+              Containment, Eradication, Recovery, and Lessons Learned. For each phase, give one
+              concrete example of an action taken during it.
+          - criterion: Containment decisions reasoned through scenario
+            points: 20
+            hint: Does the answer make a defensible containment decision and explain the tradeoffs rather than just saying "isolate it"?
+            question: >
+              At 2am, an alert fires: ransomware has been detected encrypting files on one workstation.
+              The machine is connected to a shared file server used by 200 employees. Describe your
+              immediate containment steps in order. What tradeoff exists between isolating the machine
+              immediately versus briefly monitoring it first?
+          - criterion: Chain of custody explained with consequences
+            points: 20
+            hint: Does the answer explain what chain of custody is and what specifically happens if it breaks?
+            question: >
+              Explain what chain of custody means in digital forensics and describe at least three
+              steps involved in maintaining it when seizing a device. What could happen in a legal
+              proceeding if chain of custody is broken — give a specific example.
+          - criterion: Order of volatility explained with collection rationale
+            points: 20
+            hint: Does the answer list at least 4 evidence types in correct volatility order and explain why the order matters?
+            question: >
+              List at least four types of digital evidence in order from most volatile to least volatile.
+              Explain why a forensic investigator must collect evidence in volatility order — what
+              specifically is lost if you image the hard drive before capturing RAM?
+          - criterion: Post-incident review purpose and output described
+            points: 20
+            hint: Does the answer explain the purpose of a lessons-learned review and describe what it should produce?
+            question: >
+              Explain the purpose of a post-incident review (lessons learned). What questions should
+              it answer? What is the difference between identifying a root cause and assigning blame,
+              and why does that distinction matter for a functional security team?
+
+  # ============================================================
+  # COURSE 4 — Email Security Essentials
+  # ============================================================
+  - slug: email-security-essentials
+    title: "Email Security Essentials"
+    tagline: "The most common attack vector. The least trained skill."
+    description: >
+      Five practical lessons covering the threats, defences, and habits that
+      protect organisations and individuals from email-based attacks — from
+      spotting a phish to understanding what happens after a mistaken click.
+    icon: "📧"
     difficulty: beginner
-    challenge: |
-      Write a prompt that gets Claude to explain how electric guitars make sound —
-      to a curious 8-year-old who has never touched one.
-    instructions: |
-      A great prompt is like a great song intro. It sets the vibe, tells the
-      performer exactly what you need, and leaves no room for confusion.
+    lesson_type: knowledge
+    lessons:
 
-      Things to think about before you write:
-      — Who is your audience? (You should tell Claude.)
-      — What exactly needs explaining?
-      — Should there be analogies? How long? What tone?
+      - slug: email-phishing-recognition
+        number: 1
+        title: "Phishing Recognition"
+        tagline: "If it looks urgent and asks you to click, slow down."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Phishing is responsible for the majority of data breaches. Attackers
+          craft emails that exploit urgency, authority, and familiarity to bypass
+          your critical thinking.
 
-      There's no single right answer. But there are definitely better and worse ones.
-    rubric:
-      - criterion: Audience specified in the prompt
-        points: 20
-        hint: Did you tell Claude this is for an 8-year-old?
-      - criterion: Analogy present in the output
-        points: 20
-        hint: Did the output use a real-world comparison a kid would recognise?
-      - criterion: Age-appropriate language throughout
-        points: 20
-        hint: Would an actual 8-year-old understand every sentence?
-      - criterion: Physically accurate explanation
-        points: 20
-        hint: Is the underlying science correct?
-      - criterion: Engaging and fun to read
-        points: 20
-        hint: Would a kid actually want to finish reading this?
-    model: claude-haiku-4-5-20251001
-    max_tokens: 400
+          Answer the five questions below. Explain your reasoning — this is not
+          a tick-box quiz. Real-world examples and specific indicators will score
+          higher than vague generalisations.
+        instructions: |
+          Key areas this lesson covers:
+          — Phishing vs spear-phishing vs whaling: how targeting changes the attack
+          — Social engineering triggers: urgency, fear, authority, curiosity, scarcity
+          — Technical indicators: mismatched URLs, lookalike domains, spoofed display names
+          — Visual indicators: generic greetings, pressure language, unexpected attachments
+          — Vishing and smishing: the same tactics via phone and SMS
+          — Reporting procedures and why not clicking is only half the answer
+        rubric:
+          - criterion: Social engineering triggers identified and explained
+            points: 20
+            hint: Does the answer name specific psychological triggers and explain how attackers exploit them?
+            question: >
+              Phishing emails rely on psychological manipulation rather than technical exploits.
+              Name at least three psychological triggers attackers commonly use, explain how each
+              works, and give a brief example of how an attacker might use each one in an email.
+          - criterion: Spear-phishing distinguished from generic phishing
+            points: 20
+            hint: Does the answer explain that spear-phishing is targeted, describe what personalisation attackers use, and explain why it is more dangerous?
+            question: >
+              Explain the difference between a generic phishing campaign and a spear-phishing attack.
+              What information might an attacker gather before sending a spear-phishing email?
+              Why is spear-phishing significantly harder to detect than bulk phishing?
+          - criterion: Technical URL indicators correctly identified
+            points: 20
+            hint: Does the answer describe specific URL manipulation techniques — lookalike domains, subdomain abuse, URL shorteners — not just "check the link"?
+            question: >
+              A colleague receives an email with a link that displays as
+              "https://paypa1.com/verify-account". Explain what is suspicious about this URL,
+              describe two other URL techniques attackers use to disguise malicious links, and
+              explain how you would safely investigate a suspicious link without clicking it.
+          - criterion: Response procedure described accurately
+            points: 20
+            hint: Does the answer describe a concrete response process — report, do not forward, preserve evidence — rather than just "tell IT"?
+            question: >
+              You receive a convincing phishing email that appears to come from your CEO asking you
+              to urgently purchase gift cards. You did not click anything. Describe the steps you
+              should take, in order, including how to report it and what information to preserve.
+              Why is forwarding the email to colleagues to warn them potentially harmful?
+          - criterion: Vishing and smishing explained with distinguishing features
+            points: 20
+            hint: Does the answer correctly explain vishing and smishing, describe how they differ from email phishing, and give realistic examples?
+            question: >
+              Explain what vishing and smishing are. How are the tactics similar to email phishing,
+              and what makes them different? Give one realistic example of each, and explain one
+              reason why these attacks are often more effective than email-based phishing.
+
+      - slug: email-authentication-protocols
+        number: 2
+        title: "Email Authentication — SPF, DKIM, DMARC"
+        tagline: "Three protocols that make spoofing much harder."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          SPF, DKIM, and DMARC are the technical controls that let receiving mail
+          servers verify whether an email actually came from where it claims.
+          Together they close the gap that makes email spoofing so easy.
+
+          Answer the five questions below. Explain what each protocol does, how
+          they work together, and what happens when one is missing or misconfigured.
+        instructions: |
+          Key areas this lesson covers:
+          — Why SMTP has no built-in sender verification
+          — SPF: DNS TXT record listing authorised sending IPs; pass/fail/softfail
+          — DKIM: cryptographic signature added by sending server; public key in DNS
+          — DMARC: policy record that tells receivers what to do on SPF/DKIM failure; reporting
+          — Alignment: DMARC requires SPF or DKIM to align with the From header domain
+          — Common misconfigurations: SPF softfail, no DMARC policy (p=none), broken DKIM selector
+          — BIMI: brand indicator extension that rewards p=reject/quarantine DMARC policies
+        rubric:
+          - criterion: SPF purpose and mechanism explained correctly
+            points: 20
+            hint: Does the answer explain SPF as a DNS record listing authorised senders, describe what happens on pass/fail, and explain its limitation with forwarding?
+            question: >
+              Explain what SPF is, where it is published, and what it checks. An organisation sets
+              its SPF record to "v=spf1 include:mailprovider.com ~all". What does the "~all"
+              (softfail) mean compared to "-all" (hardfail)? Describe one common scenario where
+              legitimate email fails SPF despite being genuine.
+          - criterion: DKIM signature creation and verification described
+            points: 20
+            hint: Does the answer explain that DKIM signs the message with a private key, that the public key is in DNS, and that this proves the message was not modified in transit?
+            question: >
+              Explain how DKIM works: what is signed, where the signing key is stored, and how a
+              receiving server verifies the signature. What protection does DKIM provide that SPF
+              does not? What happens to the DKIM signature if an email is slightly modified after
+              being signed?
+          - criterion: DMARC policy options and enforcement explained
+            points: 20
+            hint: Does the answer describe all three DMARC policies (none/quarantine/reject), explain alignment, and describe what DMARC reports contain?
+            question: >
+              Explain what DMARC does and describe the three policy options: p=none, p=quarantine,
+              and p=reject. What does DMARC alignment mean, and why must either SPF or DKIM align
+              with the From header domain for DMARC to pass? What should an organisation do first
+              before moving to p=reject?
+          - criterion: Layered interaction between the three protocols reasoned through
+            points: 20
+            hint: Does the answer correctly explain that DMARC requires at least one of SPF or DKIM to both pass and align, and reason through what happens if one is missing?
+            question: >
+              An attacker sends a spoofed email claiming to be from company.com. The attacker's
+              sending server is not in company.com's SPF record, but they do not control the
+              company.com domain. Explain step by step how SPF, DKIM, and DMARC would each
+              evaluate this email, and what the receiving server would do if DMARC is set to
+              p=reject versus p=none.
+          - criterion: Real-world misconfiguration consequences described
+            points: 20
+            hint: Does the answer identify specific misconfigurations and explain their real-world consequence — not just "it might fail"?
+            question: >
+              A security audit finds that a company has SPF published with "~all", no DKIM configured,
+              and a DMARC record of "v=DMARC1; p=none; rua=mailto:dmarc@company.com". Describe what
+              each of these findings means in practice. What specific attack does this configuration
+              make easier, and what should the company prioritise fixing first and why?
+
+      - slug: email-bec-attacks
+        number: 3
+        title: "Business Email Compromise"
+        tagline: "The fraud that cost businesses $2.9 billion last year."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Business Email Compromise (BEC) is one of the highest-value cybercrime
+          categories. Attackers impersonate executives, suppliers, or colleagues
+          to authorise wire transfers, redirect payroll, or steal sensitive data —
+          often without any malware.
+
+          Answer the five questions below with specific reasoning. Vague answers
+          will not score well — think through the attacker's perspective and the
+          defender's controls.
+        instructions: |
+          Key areas this lesson covers:
+          — BEC categories: CEO fraud, invoice fraud, payroll redirect, attorney impersonation, data theft
+          — Attack chain: reconnaissance → account compromise or spoofing → social engineering → action
+          — Why BEC bypasses technical controls: no malware, no malicious links, uses real accounts
+          — Indicators: out-of-band requests, urgency, secrecy, unusual payment details
+          — Controls: out-of-band verification, dual authorisation, payment change procedures
+          — Account takeover (ATO): how compromised email accounts enable BEC
+          — Reporting: FBI IC3, financial institution contact, incident response timeline
+        rubric:
+          - criterion: BEC categories and their objectives distinguished
+            points: 20
+            hint: Does the answer correctly describe at least three distinct BEC categories and explain what the attacker is trying to achieve in each?
+            question: >
+              Describe three distinct types of Business Email Compromise attack. For each type,
+              explain who the attacker impersonates, what they request, and what the organisation
+              loses if the attack succeeds. Why does BEC often achieve higher financial losses than
+              ransomware attacks?
+          - criterion: Why BEC evades technical controls explained
+            points: 20
+            hint: Does the answer specifically explain that BEC uses no malware or links, and may use genuinely compromised accounts, making signature-based and URL-filtering tools ineffective?
+            question: >
+              A company has antivirus, email filtering, and URL scanning deployed. Explain why
+              these controls often fail to detect a BEC attack. In a scenario where an attacker
+              has genuinely compromised the CFO's email account, describe what the attacker can
+              do that makes detection even harder.
+          - criterion: Red flags in a BEC scenario correctly identified
+            points: 20
+            hint: Does the answer identify the specific red flags present in the scenario — urgency, secrecy, unusual channel, payment change — not just generic advice?
+            question: >
+              You receive an email that appears to be from your CEO. It says: "I'm in meetings all
+              day and need you to arrange an urgent wire transfer of $48,000 to a new supplier —
+              details attached. Keep this between us until it's done. Don't call me, just reply
+              here." List every red flag present in this message, explain why each is suspicious,
+              and describe exactly what you should do.
+          - criterion: Verification procedures and controls described correctly
+            points: 20
+            hint: Does the answer describe out-of-band verification specifically — not replying to the same email — and mention dual authorisation or procedural controls?
+            question: >
+              What is out-of-band verification and why is it the single most effective control
+              against BEC? Describe a practical out-of-band verification procedure for a payment
+              request. What organisational policy changes would reduce BEC risk for wire transfers
+              and payroll changes?
+          - criterion: Account takeover pathway into BEC explained
+            points: 20
+            hint: Does the answer explain how a compromised account is more dangerous than a spoofed one, describe how the attacker uses it, and connect this to detection difficulty?
+            question: >
+              Explain how an attacker might compromise a genuine employee email account and use it
+              to carry out BEC. How does an attack launched from a real, compromised account differ
+              from one using a lookalike domain? What signs might indicate an email account has been
+              compromised, even before any fraud attempt is made?
+
+      - slug: email-safe-habits
+        number: 4
+        title: "Safe Email Habits"
+        tagline: "The daily decisions that keep attackers out."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Technical controls help, but the last line of defence is the person
+          reading the email. Good email habits reduce your attack surface and
+          limit damage when something slips through.
+
+          Answer the five questions below. Focus on the reasoning behind each
+          habit — understanding why a control works is more valuable than
+          memorising a checklist.
+        instructions: |
+          Key areas this lesson covers:
+          — Email hygiene: separate accounts, unsubscribing, avoiding address harvesting
+          — Attachment safety: file types, macros, password-protected zips, sandboxing
+          — Link handling: hover-before-click, URL expansion tools, typing URLs manually
+          — Sender verification: checking headers, display name vs actual address, reply-to mismatch
+          — Auto-forwarding risks and why external forwarding should be blocked by policy
+          — Encryption: when to use TLS vs end-to-end encryption (S/MIME, PGP), email vs messaging apps
+          — Shared mailboxes and delegation risks
+        rubric:
+          - criterion: Attachment risk reasoning applied to scenario
+            points: 20
+            hint: Does the answer identify specific risky file types, explain what macro-enabled documents can do, and describe the right action rather than just "don't open attachments"?
+            question: >
+              A supplier sends you a Microsoft Word document with a note: "Please enable macros to
+              view the content." Explain the specific risk this presents, describe what a malicious
+              macro can do when enabled, and describe what you should do instead of enabling macros.
+              Which file extensions are commonly used in malicious email attachments and why?
+          - criterion: Header inspection technique described correctly
+            points: 20
+            hint: Does the answer explain display name vs actual email address, describe how to check headers, and correctly identify what the Reply-To header can reveal?
+            question: >
+              Explain the difference between the display name and the actual sender address in an
+              email. How would you check the actual sending address in a typical email client?
+              What is the Reply-To header, and how can a mismatch between Reply-To and From be
+              a sign of a malicious email?
+          - criterion: Auto-forwarding risk explained with attacker use case
+            points: 20
+            hint: Does the answer explain that auto-forwarding is frequently used by attackers who have compromised an account to silently exfiltrate email, and explain why it is hard to detect?
+            question: >
+              Why do security policies commonly prohibit automatic email forwarding to external
+              addresses? Describe a specific attack scenario in which an attacker would set up
+              email auto-forwarding after compromising an account. How might an account owner fail
+              to notice this is happening?
+          - criterion: Email encryption options and their appropriate use cases described
+            points: 20
+            hint: Does the answer distinguish between transport encryption (TLS) and end-to-end encryption (S/MIME/PGP), and correctly describe when each is appropriate?
+            question: >
+              Explain the difference between TLS email encryption and end-to-end email encryption
+              such as S/MIME or PGP. For each type, describe what it protects against and what it
+              does not protect against. When would you advise someone to use a secure messaging
+              app instead of encrypted email, and why?
+          - criterion: Practical safe-sending habits described with rationale
+            points: 20
+            hint: Does the answer give specific actionable habits — CC discipline, sensitive data handling, BCC for bulk, verifying recipient addresses — and explain the risk each mitigates?
+            question: >
+              Describe at least four practical habits for sending email more securely, focusing on
+              reducing the risk of data leakage and accidental exposure. For each habit, explain
+              the specific risk it mitigates. Include at least one habit related to recipient
+              address handling and one related to sensitive data in email bodies or attachments.
+
+      - slug: email-after-the-click
+        number: 5
+        title: "What To Do When You Click"
+        tagline: "One wrong click doesn't have to become a breach."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Everyone clicks something they shouldn't eventually. What matters is
+          what happens next. A fast, correct response limits damage; a slow or
+          wrong response turns an incident into a breach.
+
+          Answer the five questions below. Treat this as a practical incident
+          response guide — walk through your reasoning clearly.
+        instructions: |
+          Key areas this lesson covers:
+          — Immediate response: disconnect, don't restart, preserve evidence
+          — Credential compromise: change passwords vs waiting, where to change them, MFA
+          — Reporting: who to tell, what to say, when, why speed matters
+          — Indicators of compromise post-click: new processes, network connections, changed settings
+          — Credential stuffing: why one compromised password endangers other accounts
+          — Organisational response: IT/security team procedures, legal and regulatory considerations
+          — Recovery steps: scanning, password resets, reviewing account activity, MFA enrolment
+        rubric:
+          - criterion: Immediate post-click steps described in correct order
+            points: 20
+            hint: Does the answer give a prioritised sequence — disconnect network, do not restart, report immediately — and explain why the order matters?
+            question: >
+              You click a link in an email and a page loads briefly before closing. You are not sure
+              what happened. Describe the immediate steps you should take, in order, within the
+              first five minutes. Why should you not restart the computer? Why should you disconnect
+              from the network before calling IT rather than after?
+          - criterion: Credential compromise response described correctly
+            points: 20
+            hint: Does the answer explain that passwords must be changed from a different, uncompromised device, cover all accounts sharing that password, and include enabling MFA?
+            question: >
+              After clicking a phishing link, you believe you may have entered your password on a
+              fake login page. Describe the steps you should take to contain and recover from a
+              potential credential compromise. Why is it important to change the password from a
+              different device? Which other accounts should you prioritise reviewing and why?
+          - criterion: Reporting rationale and what information to provide explained
+            points: 20
+            hint: Does the answer explain why fast reporting matters for the organisation — not just for the individual — and describe what specific information the security team will need?
+            question: >
+              Many employees delay reporting a phishing click because they are embarrassed or hope
+              nothing bad happened. Explain why fast reporting is critical from an organisational
+              security perspective — what can the security team do in the first hour that they
+              cannot do after 24 hours? Describe what information you should preserve and report.
+          - criterion: Credential stuffing risk recognised and mitigated
+            points: 20
+            hint: Does the answer correctly explain that attackers test compromised credentials against other services, and describe unique passwords and a password manager as the mitigations?
+            question: >
+              Explain what credential stuffing is and how it relates to a phishing attack where a
+              password was stolen. If an attacker steals your email password, which other accounts
+              are at risk and why? Describe two practices that would significantly reduce the risk
+              of credential stuffing affecting you after a phishing compromise.
+          - criterion: Indicators of post-click compromise described with detection approach
+            points: 20
+            hint: Does the answer describe specific observable signs of compromise — new processes, unexpected network traffic, changed browser settings, new email rules — and explain how to look for them?
+            question: >
+              After clicking a suspicious link, what signs might indicate that malware was
+              successfully installed or your account was accessed? Describe at least four specific
+              indicators you or an IT team could look for. For one of these indicators, describe
+              how you would actually check for it on a Windows computer.

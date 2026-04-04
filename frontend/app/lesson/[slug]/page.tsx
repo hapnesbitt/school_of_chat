@@ -4,6 +4,7 @@ import LessonClient from "./LessonClient";
 interface RubricItem {
     criterion: string;
     points: number;
+    question: string;
 }
 
 interface Lesson {
@@ -12,10 +13,11 @@ interface Lesson {
     title: string;
     tagline: string;
     difficulty: string;
+    lesson_type: string;
+    course_slug: string;
     challenge: string;
     instructions: string;
     rubric: RubricItem[];
-    model: string;
     max_tokens: number;
 }
 
