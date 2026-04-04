@@ -36,11 +36,13 @@ export default function CourseCertificateBanner({
         return (
             <Link
                 href={`/certificate/${session.user.id}/${courseSlug}`}
+                aria-label={`Certificate earned — view your certificate for this course`}
                 className="flex items-center justify-between gap-4 rounded-xl border border-rock-yellow/30
-                           bg-rock-yellow/5 px-5 py-4 hover:bg-rock-yellow/10 transition-all mb-8"
+                           bg-rock-yellow/5 px-5 py-4 hover:bg-rock-yellow/10 transition-all mb-8
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
             >
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl">🏆</span>
+                    <span aria-hidden="true" className="text-2xl">🏆</span>
                     <div>
                         <p className="font-black text-rock-yellow text-sm">Certificate Earned</p>
                         <p className="text-xs text-slate-500">
@@ -48,21 +50,26 @@ export default function CourseCertificateBanner({
                         </p>
                     </div>
                 </div>
-                <span className="text-rock-yellow text-sm font-bold shrink-0">View →</span>
+                <span aria-hidden="true" className="text-rock-yellow text-sm font-bold shrink-0">View →</span>
             </Link>
         );
     }
 
     if (cert.passed_count > 0) {
+        const remaining = (cert.needed ?? 3) - cert.passed_count;
         return (
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-rock-card
-                            px-5 py-4 mb-8">
-                <span className="text-xl">📋</span>
+            <div
+                role="status"
+                aria-label={`Progress: ${cert.passed_count} lesson${cert.passed_count !== 1 ? "s" : ""} passed, ${remaining} more needed for certificate`}
+                className="flex items-center gap-3 rounded-xl border border-white/10 bg-rock-card
+                            px-5 py-4 mb-8"
+            >
+                <span aria-hidden="true" className="text-xl">📋</span>
                 <p className="text-xs text-slate-500">
                     <span className="text-slate-300 font-bold">{cert.passed_count}</span> lesson
                     {cert.passed_count !== 1 ? "s" : ""} passed with 70+
                     {" — "}
-                    <span className="text-rock-yellow">{(cert.needed ?? 3) - cert.passed_count} more</span> for your certificate
+                    <span className="text-rock-yellow">{remaining} more</span> for your certificate
                 </p>
             </div>
         );

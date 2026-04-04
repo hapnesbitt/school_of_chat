@@ -48,22 +48,26 @@ export default async function CoursePage({ params }: { params: Promise<{ courseS
 
     return (
         <div className="min-h-screen bg-rock-bg text-slate-200">
-            <nav className="border-b border-white/5 px-6 py-4 flex items-center justify-between">
+            <nav aria-label="Site navigation" className="border-b border-white/5 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="text-slate-500 hover:text-white transition-colors text-sm">
+                    <Link
+                        href="/"
+                        className="text-slate-500 hover:text-white transition-colors text-sm
+                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow rounded"
+                    >
                         ← Courses
                     </Link>
-                    <span className="text-white/10">|</span>
-                    <span className="text-2xl">{course.icon}</span>
+                    <span aria-hidden="true" className="text-white/10">|</span>
+                    <span aria-hidden="true" className="text-2xl">{course.icon}</span>
                     <span className="font-black text-white text-sm hidden sm:block">{course.title}</span>
                 </div>
                 <UserMenu />
             </nav>
 
-            <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+            <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
                 {/* Header */}
                 <div className="mb-10">
-                    <div className="text-5xl mb-4">{course.icon}</div>
+                    <div aria-hidden="true" className="text-5xl mb-4">{course.icon}</div>
                     <h1 className="text-4xl font-black text-white mb-2 tracking-tighter">{course.title}</h1>
                     <p className="text-slate-400 leading-relaxed">{course.description}</p>
                 </div>
@@ -75,37 +79,39 @@ export default async function CoursePage({ params }: { params: Promise<{ courseS
                 <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">
                     Lessons
                 </h2>
-                <div className="space-y-3">
+                <ol className="space-y-3 list-none">
                     {course.lessons.map((lesson) => (
-                        <Link
-                            key={lesson.slug}
-                            href={`/lesson/${lesson.slug}`}
-                            className="group block rounded-xl border border-white/10 bg-rock-card
-                                       hover:border-rock-yellow/30 hover:bg-[#161616] transition-all p-5"
-                        >
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-2xl font-black text-white/20 group-hover:text-rock-yellow/40 transition-colors tabular-nums w-8 shrink-0">
-                                        {String(lesson.number).padStart(2, "0")}
-                                    </span>
-                                    <div>
-                                        <p className="font-bold text-white group-hover:text-rock-yellow transition-colors">
-                                            {lesson.title}
-                                        </p>
-                                        <p className="text-sm text-slate-500 mt-0.5">{lesson.tagline}</p>
+                        <li key={lesson.slug}>
+                            <Link
+                                href={`/lesson/${lesson.slug}`}
+                                className="group block rounded-xl border border-white/10 bg-rock-card
+                                           hover:border-rock-yellow/30 hover:bg-[#161616] transition-all p-5
+                                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <span aria-hidden="true" className="text-2xl font-black text-white/20 group-hover:text-rock-yellow/40 transition-colors tabular-nums w-8 shrink-0">
+                                            {String(lesson.number).padStart(2, "0")}
+                                        </span>
+                                        <div>
+                                            <p className="font-bold text-white group-hover:text-rock-yellow transition-colors">
+                                                {lesson.title}
+                                            </p>
+                                            <p className="text-sm text-slate-500 mt-0.5">{lesson.tagline}</p>
+                                        </div>
                                     </div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded border shrink-0 mt-0.5 ${DIFF_STYLE[lesson.difficulty] ?? DIFF_STYLE.beginner}`}>
+                                        {lesson.difficulty}
+                                    </span>
                                 </div>
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded border shrink-0 mt-0.5 ${DIFF_STYLE[lesson.difficulty] ?? DIFF_STYLE.beginner}`}>
-                                    {lesson.difficulty}
-                                </span>
-                            </div>
-                        </Link>
+                            </Link>
+                        </li>
                     ))}
-                </div>
-            </div>
+                </ol>
+            </main>
 
             <footer className="border-t border-white/5 py-8 text-center text-xs text-slate-600">
-                School of Chat · <Link href="/" className="hover:text-slate-400 transition-colors">All courses</Link>
+                School of Chat · <Link href="/" className="hover:text-slate-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow rounded">All courses</Link>
             </footer>
         </div>
     );

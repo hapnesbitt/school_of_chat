@@ -111,11 +111,12 @@ def health():
 def list_courses():
     return jsonify([
         {
-            "slug":        c["slug"],
-            "title":       c["title"],
-            "tagline":     c["tagline"],
-            "description": c["description"],
-            "icon":        c["icon"],
+            "slug":         c["slug"],
+            "title":        c["title"],
+            "tagline":      c["tagline"],
+            "description":  c["description"],
+            "icon":         c["icon"],
+            "tier":         c.get("tier", 1),
             "lesson_count": len(c["lessons"]),
         }
         for c in COURSES

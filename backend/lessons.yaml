@@ -11,6 +11,7 @@ courses:
       good prompts from bad ones. You write real prompts, see real outputs,
       and get graded on what actually matters.
     icon: "🎸"
+    tier: 3
     lessons:
 
       - slug: opening-act
@@ -263,6 +264,7 @@ courses:
       No multiple choice — you write real answers to real questions and get
       graded on accuracy, depth, and understanding.
     icon: "🏭"
+    tier: 2
     lessons:
 
       - slug: gmp-what-is-gmp
@@ -497,6 +499,7 @@ courses:
       definitions — you explain concepts, walk through scenarios, and justify
       decisions. Graded by AI on accuracy, depth, and practical reasoning.
     icon: "🛡️"
+    tier: 2
     lessons:
 
       - slug: secplus-threats-vulnerabilities
@@ -800,6 +803,7 @@ courses:
       protect organisations and individuals from email-based attacks — from
       spotting a phish to understanding what happens after a mistaken click.
     icon: "📧"
+    tier: 1
     difficulty: beginner
     lesson_type: knowledge
     lessons:
@@ -1125,3 +1129,727 @@ courses:
               successfully installed or your account was accessed? Describe at least four specific
               indicators you or an IT team could look for. For one of these indicators, describe
               how you would actually check for it on a Windows computer.
+
+  # ============================================================
+  # COURSE 5 — Workplace Respect & Harassment Prevention
+  # ============================================================
+  - slug: workplace-harassment-prevention
+    title: "Workplace Respect & Harassment Prevention"
+    tagline: "Required training that actually makes you think."
+    description: >
+      Five scenario-based lessons covering what harassment is, how to recognise
+      it, your rights and responsibilities, how to respond, and how to contribute
+      to a workplace where everyone can do their best work.
+    icon: "🤝"
+    tier: 1
+    difficulty: beginner
+    lesson_type: knowledge
+    lessons:
+
+      - slug: harassment-what-is-it
+        number: 1
+        title: "What Is Harassment"
+        tagline: "Naming it clearly is the first step to addressing it."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Harassment has a precise legal and organisational meaning — and a much
+          broader everyday reality. Understanding the definitions, categories, and
+          legal frameworks gives you the foundation to recognise and respond to
+          it correctly.
+
+          Answer the five questions below. Use your own words and reasoning.
+          Scenario-based answers will score better than textbook recitations.
+        instructions: |
+          Key areas this lesson covers:
+          — Legal definition of harassment: unwanted conduct related to a protected characteristic
+          — Protected characteristics: sex, race, religion, disability, age, sexual orientation, and others
+          — Quid pro quo harassment: submission to conduct made a condition of employment or benefit
+          — Hostile work environment: conduct that is severe or pervasive enough to alter working conditions
+          — Sexual harassment vs other forms: same legal framework, different triggers
+          — Harassment vs rudeness: why not every unpleasant interaction meets the legal threshold
+          — Third-party harassment: customers, contractors, clients — employer still has a duty of care
+        rubric:
+          - criterion: Quid pro quo and hostile environment correctly distinguished
+            points: 20
+            hint: Does the answer correctly explain both categories and give a concrete example of each that demonstrates the distinction?
+            question: >
+              Explain the difference between quid pro quo harassment and hostile work environment
+              harassment. Give one realistic workplace example of each. Why does the distinction
+              matter legally — does an employee need to suffer a tangible job consequence for
+              hostile environment harassment to be actionable?
+          - criterion: Protected characteristics understood in context
+            points: 20
+            hint: Does the answer correctly list several protected characteristics and explain that harassment is tied to these — not just general rudeness?
+            question: >
+              Harassment law protects people from unwanted conduct related to specific protected
+              characteristics. Name at least five protected characteristics, and explain why the
+              law is structured this way rather than simply protecting everyone from all
+              unpleasant treatment. Does harassment have to be intentional to be unlawful?
+          - criterion: Severity and pervasiveness threshold reasoned through
+            points: 20
+            hint: Does the answer explain that a single incident can meet the threshold if severe enough, and that milder conduct must be frequent or sustained to qualify?
+            question: >
+              Not every offensive or uncomfortable interaction constitutes harassment. Explain
+              what "severe or pervasive" means in the context of hostile work environment claims.
+              Can a single incident qualify? Give an example of a single incident that would
+              likely meet the threshold and explain why, then give an example of repeated
+              behaviour that might also qualify.
+          - criterion: Third-party harassment scenario handled correctly
+            points: 20
+            hint: Does the answer recognise that the employer has an obligation to act even when the harasser is not an employee?
+            question: >
+              A customer repeatedly makes sexually suggestive comments to a sales associate during
+              site visits. The associate reports it to their manager, who responds: "They're an
+              important client — just ignore it." Explain what is wrong with the manager's
+              response. What obligation does the employer have in this situation, and what steps
+              should the manager take?
+          - criterion: Harassment distinguished from general workplace conflict
+            points: 20
+            hint: Does the answer clearly explain that harassment requires a protected characteristic link, distinguishing it from interpersonal friction that is unpleasant but not legally actionable?
+            question: >
+              A manager repeatedly criticises an employee's work in front of colleagues, assigns
+              them undesirable tasks, and excludes them from team lunches. Is this harassment?
+              What additional information would you need to know? Explain how the presence or
+              absence of a protected characteristic changes the legal and policy analysis.
+
+      - slug: harassment-recognising-behaviour
+        number: 2
+        title: "Recognising Inappropriate Behaviour"
+        tagline: "It isn't always obvious. Sometimes that's the point."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Harassment exists on a spectrum — from unmistakable to subtle. The less
+          overt forms are often harder to name, easier to dismiss, and just as
+          damaging over time. Recognising them requires paying attention to
+          patterns, context, and impact.
+
+          Answer the five questions below. Put yourself in the scenarios and
+          reason through what you observe, what it means, and what to do.
+        instructions: |
+          Key areas this lesson covers:
+          — Overt harassment: explicit comments, unwanted touching, direct threats or propositions
+          — Subtle harassment: exclusion, microaggressions, undermining, "jokes", differential treatment
+          — Pattern recognition: why a single incident may seem ambiguous but a pattern makes it clear
+          — Bystander experience: what witnesses observe that targets may not fully see
+          — Impact vs intent: why "I was joking" does not determine whether conduct is harassment
+          — Digital harassment: emails, messaging apps, social media — same rules apply
+          — Power dynamics: how seniority and dependency make harassment harder to resist and report
+        rubric:
+          - criterion: Subtle harassment forms identified and explained
+            points: 20
+            hint: Does the answer describe specific subtle forms — microaggressions, exclusion, undermining, "jokes" with plausible deniability — rather than only naming obvious examples?
+            question: >
+              Describe three forms of subtle or indirect workplace harassment that might be
+              individually deniable but constitute a pattern over time. For each example,
+              explain why it may be harder to identify and report than overt harassment, and
+              why that difficulty does not make it less serious.
+          - criterion: Impact vs intent principle correctly applied to scenario
+            points: 20
+            hint: Does the answer explain that intent does not determine whether conduct constitutes harassment, and that the impact on the recipient is what matters?
+            question: >
+              A colleague who considers himself funny regularly makes jokes about the accents of
+              non-native English speakers on the team. When challenged, he says he means no harm
+              and that everyone is too sensitive. Evaluate his response. Does intent determine
+              whether conduct is harassment? Explain the "impact vs intent" principle and apply
+              it to this scenario.
+          - criterion: Bystander observation role described accurately
+            points: 20
+            hint: Does the answer explain that bystanders often have clearer sight lines to patterns, can corroborate reports, and have a responsibility to act?
+            question: >
+              You notice that a senior colleague consistently talks over a junior female team member
+              in meetings, takes credit for her ideas, and makes dismissive comments about her
+              contributions — but only when no one from HR is present. The colleague herself has
+              not reported anything. What is your role as a bystander? What are your options, and
+              what considerations should inform which you choose?
+          - criterion: Power dynamic in harassment scenario reasoned through
+            points: 20
+            hint: Does the answer explain specifically how the power imbalance limits the target's ability to resist, report, or even clearly identify the behaviour as wrong?
+            question: >
+              A new employee is dependent on a senior manager for project assignments, performance
+              reviews, and references. The manager occasionally makes comments about the employee's
+              appearance and sends messages outside work hours that feel personal rather than
+              professional. The employee is uncertain whether they are overreacting. Explain how
+              the power dynamic in this situation affects how the employee experiences and
+              interprets the behaviour, and what that means for how the organisation should
+              respond if it comes to light.
+          - criterion: Digital harassment correctly identified as subject to the same standards
+            points: 20
+            hint: Does the answer apply the same harassment framework to digital communications and explain that the channel does not change the nature or seriousness of the conduct?
+            question: >
+              A team member receives repeated messages on the company Slack from a colleague
+              containing "just banter" — comments about their appearance, unsolicited opinions
+              about their personal life, and forwarded memes that rely on racial stereotypes.
+              The colleague argues it is not harassment because it is "just chat, not the real
+              workplace." Evaluate this argument. Does the digital channel change whether the
+              conduct could constitute harassment? What should the recipient do?
+
+      - slug: harassment-rights-and-responsibilities
+        number: 3
+        title: "Your Rights and Responsibilities"
+        tagline: "Knowing the rules protects everyone — including you."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Harassment policy is not just about what is prohibited — it is about
+          what you are entitled to, what you are required to do, and the
+          protections that exist when you act in good faith.
+
+          Answer the five questions below. Think through the obligations and
+          protections from multiple perspectives: as a target, a witness, a
+          manager, and an organisation.
+        instructions: |
+          Key areas this lesson covers:
+          — Right to a harassment-free workplace: employer's legal duty of care
+          — Reporting obligations: who is required to report (managers vs individual contributors)
+          — Confidentiality: what can be kept private, what cannot, and why
+          — Retaliation: definition, examples, why it is separately prohibited and often more damaging
+          — Good faith reporting: protection even if the investigation finds no violation
+          — Manager obligations: why supervisors have a heightened duty to act
+          — Failure to report: consequences for individuals and organisations
+        rubric:
+          - criterion: Employer's duty of care explained correctly
+            points: 20
+            hint: Does the answer explain that the employer has a proactive legal obligation — not just to respond when told, but to take reasonable steps to prevent harassment?
+            question: >
+              Explain what an employer's "duty of care" means in the context of harassment prevention.
+              Does an employer only become responsible once harassment has been reported, or do they
+              have proactive obligations? What does "reasonable steps" mean in practice — give two
+              examples of what a reasonable employer should have in place before any incident occurs.
+          - criterion: Retaliation defined and its separate prohibition explained
+            points: 20
+            hint: Does the answer correctly define retaliation, explain that it is prohibited separately from the underlying harassment, and give concrete examples of retaliatory acts?
+            question: >
+              Define workplace retaliation in the context of harassment reporting. Give three
+              examples of retaliatory acts — including at least one that is subtle rather than
+              obvious. Explain why retaliation is prohibited separately from the underlying
+              harassment, and what someone who experiences retaliation after reporting should do.
+          - criterion: Manager reporting obligation distinguished from individual contributor obligation
+            points: 20
+            hint: Does the answer correctly explain that managers typically have a mandatory obligation to report, even if the target has asked them not to, and explain why?
+            question: >
+              Explain how a manager's reporting obligation differs from that of a non-managerial
+              colleague. If a team member discloses harassment to their manager and asks them to
+              keep it confidential and take no action, is the manager free to comply? Explain what
+              the manager must do and why the obligation exists even when the target requests
+              otherwise.
+          - criterion: Good faith reporting protection applied to scenario
+            points: 20
+            hint: Does the answer explain that good faith protection covers reports that are genuinely believed — even if the investigation does not substantiate the claim — and that false reports made knowingly are not protected?
+            question: >
+              An employee reports a colleague for harassment. After investigation, HR concludes
+              that while the behaviour was inappropriate, it did not meet the threshold for
+              disciplinary action. The accused colleague is upset and demands the reporter face
+              consequences for making a false claim. Explain what "good faith reporting" protection
+              means in this situation. Under what circumstances would a reporter face consequences
+              for making a complaint?
+          - criterion: Confidentiality limits correctly explained
+            points: 20
+            hint: Does the answer explain that complete confidentiality cannot always be guaranteed once a formal report is made, because the organisation has an independent obligation to investigate?
+            question: >
+              An employee tells HR they want to report harassment but only if their identity can
+              be kept completely confidential. Explain what HR should tell them. What confidentiality
+              protections genuinely exist in the process? Why can complete confidentiality not always
+              be guaranteed, and how should HR handle this limitation honestly with the reporter?
+
+      - slug: harassment-how-to-respond
+        number: 4
+        title: "How To Respond"
+        tagline: "What you do — and say — in the moment matters."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Responding to harassment — whether as the person targeted, a witness,
+          or someone accused — requires judgement, knowledge, and composure. The
+          right response depends on the situation, but there are principles that
+          apply in every case.
+
+          Answer the five questions below with specific, reasoned guidance. "Tell
+          HR" is not a complete answer — walk through the thinking.
+        instructions: |
+          Key areas this lesson covers:
+          — Responding as the target: direct response options, documentation, formal reporting
+          — Responding as a bystander: the 5Ds — Direct, Distract, Delegate, Delay, Document
+          — Responding if accused: how to engage with an investigation, what not to do
+          — Documentation: what to record, how, and why it matters for any investigation
+          — Informal vs formal resolution: when each is appropriate, and the trade-offs
+          — Protecting yourself during and after reporting: evidence, follow-up, escalation
+          — Emotional and psychological support: acknowledging that reporting is hard
+        rubric:
+          - criterion: Target response options described with reasoning
+            points: 20
+            hint: Does the answer describe multiple response options available to the target — from direct pushback through documentation to formal reporting — and explain how circumstances affect which is appropriate?
+            question: >
+              Someone has been making unwanted comments about your appearance for several weeks.
+              You have not yet reported it. Describe the options available to you at this point,
+              from least to most formal. What factors should influence which option you choose?
+              What should you be doing throughout this period regardless of which approach you take?
+          - criterion: Bystander intervention approach appropriate to scenario
+            points: 20
+            hint: Does the answer choose a specific bystander approach suited to the scenario, explain why it fits, and acknowledge the safety considerations involved?
+            question: >
+              You are in a meeting when a senior colleague makes a demeaning comment to a junior
+              colleague based on their ethnicity. The junior colleague goes quiet. The senior
+              colleague continues as if nothing happened. Describe two ways you could respond as
+              a bystander — one in the moment and one after the meeting. What considerations
+              affect which approach is safer and more effective? What is the risk of doing nothing?
+          - criterion: Response when accused described correctly and professionally
+            points: 20
+            hint: Does the answer advise cooperation with the process, avoiding retaliation, not confronting the complainant, and seeking appropriate support — without assuming the outcome?
+            question: >
+              You are informed that a colleague has made a harassment complaint against you and
+              that HR will be conducting an investigation. You believe the complaint is
+              exaggerated or a misunderstanding. Describe how you should conduct yourself during
+              the investigation. What should you avoid doing? What rights do you have in this
+              process, and what would be the worst things you could do in response?
+          - criterion: Documentation practices described with specificity
+            points: 20
+            hint: Does the answer describe what to record — date, time, location, exact words, witnesses, your response — and explain why contemporaneous documentation is more credible?
+            question: >
+              You have decided to document a pattern of inappropriate behaviour before deciding
+              whether to make a formal report. Describe what your documentation should include
+              for each incident. Why does it matter that documentation is created at the time
+              rather than recalled later? Where and how should you store this documentation?
+          - criterion: Informal vs formal resolution trade-offs reasoned through
+            points: 20
+            hint: Does the answer explain specific scenarios where each is appropriate, acknowledge the trade-offs honestly, and avoid presenting one as universally preferable?
+            question: >
+              Explain the difference between informal and formal resolution of a harassment
+              complaint. Describe a situation in which informal resolution might be appropriate
+              and one in which it would not be. What are the risks of pursuing only informal
+              resolution when the conduct is serious? What are the reasons someone might
+              reasonably prefer an informal approach even for serious conduct?
+
+      - slug: harassment-building-respect
+        number: 5
+        title: "Building a Respectful Workplace"
+        tagline: "Prevention is better than response. Culture is built deliberately."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          A harassment-free workplace is not an accident. It requires deliberate
+          choices by leaders, teams, and individuals. Understanding what a
+          healthy culture looks like — and what erodes it — is the foundation
+          of prevention.
+
+          Answer the five questions below. Think beyond individual behaviour
+          to systems, norms, and leadership responsibility.
+        instructions: |
+          Key areas this lesson covers:
+          — Culture as infrastructure: how norms and expectations are set and reinforced
+          — Psychological safety: what it is, why it matters, how it breaks down
+          — Leadership behaviours that enable or undermine respect
+          — Structural prevention: clear policies, accessible reporting, consistent enforcement
+          — Inclusivity and belonging: why diverse teams need deliberate inclusion practices
+          — Accountability without blame culture: addressing behaviour while supporting growth
+          — Measuring culture: what signals indicate a healthy or deteriorating environment
+        rubric:
+          - criterion: Psychological safety defined and connected to harassment prevention
+            points: 20
+            hint: Does the answer correctly define psychological safety, explain how it enables reporting and early intervention, and describe what undermines it?
+            question: >
+              Explain what psychological safety means in a workplace context. How does the presence
+              or absence of psychological safety affect whether harassment gets reported, addressed,
+              or allowed to continue? Describe two specific leadership behaviours that build
+              psychological safety and two that undermine it.
+          - criterion: Leader's role in setting culture described with specificity
+            points: 20
+            hint: Does the answer go beyond "lead by example" to describe specific visible behaviours, how leaders respond to violations, and the signal their response sends to the team?
+            question: >
+              A senior leader hears a sexist joke made by a high-performing team member at a
+              company event. They laugh uncomfortably and say nothing. Explain what message this
+              sends to the team, including to those who were offended and to the person who made
+              the joke. What should the leader have done instead, and why is the leader's response
+              to this moment more influential than any policy document?
+          - criterion: Structural prevention measures identified and explained
+            points: 20
+            hint: Does the answer describe specific structural elements — accessible reporting channels, consistent enforcement, training, clear policies — and explain why each matters?
+            question: >
+              Beyond individual behaviour, what structural elements must an organisation have in
+              place to genuinely prevent harassment rather than just respond to it? Describe at
+              least three structural prevention measures and explain what each one achieves.
+              What happens to culture when policies exist on paper but enforcement is inconsistent?
+          - criterion: Accountability without blame culture described correctly
+            points: 20
+            hint: Does the answer explain the distinction between holding someone accountable for behaviour and treating them as irredeemable, and explain why this matters for culture?
+            question: >
+              Explain the difference between a blame culture and an accountability culture in the
+              context of harassment. How can an organisation hold someone accountable for
+              inappropriate behaviour while still maintaining a culture where people can grow and
+              where reports are made without fear? Why does disproportionate or inconsistent
+              punishment harm culture even when the intent is to take a strong stance?
+          - criterion: Personal contribution to workplace culture described with concrete actions
+            points: 20
+            hint: Does the answer describe specific, everyday actions — not just abstract values — that an individual contributor can take to strengthen workplace culture?
+            question: >
+              You are a non-managerial employee with no formal authority over your colleagues.
+              Describe five specific actions you can take — in your day-to-day work — to
+              contribute to a more respectful and inclusive workplace. For each action, explain
+              the specific cultural outcome it supports. Avoid generic answers like "be kind" —
+              focus on concrete, observable behaviour.
+
+  # ============================================================
+  # COURSE 6 — Anti-Bribery & Corruption
+  # ============================================================
+  - slug: anti-bribery-corruption
+    title: "Anti-Bribery & Corruption"
+    tagline: "Know the line before someone asks you to cross it."
+    description: >
+      Five lessons covering bribery definitions, red flags, money laundering
+      basics, your personal obligations, and how to handle real-world pressure
+      situations — grounded in FCPA, the UK Bribery Act, and global standards.
+    icon: "⚖️"
+    tier: 1
+    difficulty: beginner
+    lesson_type: knowledge
+    lessons:
+
+      - slug: abc-what-is-bribery
+        number: 1
+        title: "What Is Bribery"
+        tagline: "A clear definition prevents a lot of expensive mistakes."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Bribery is one of the most prosecuted corporate crimes globally. The
+          laws are broader than most people expect — covering not just cash
+          payments but gifts, hospitality, and anything of value offered to
+          improperly influence a decision.
+
+          Answer the five questions below. Focus on how the law defines bribery,
+          not just common sense — the gap between the two is where prosecutions happen.
+        instructions: |
+          Key areas this lesson covers:
+          — Core definition: offering, promising, or giving a financial or other advantage to improperly influence
+          — Passive bribery: requesting or receiving a bribe (not just paying one)
+          — FCPA (US): prohibits payments to foreign officials; strict liability for companies; parent/subsidiary liability
+          — UK Bribery Act: broader — covers commercial bribery, not just public officials; corporate offence of failing to prevent
+          — "Adequate procedures" defence under UK Bribery Act
+          — Intent and improper performance: what "improper" means legally
+          — Facilitation payments: illegal under UK law, limited exception under FCPA
+        rubric:
+          - criterion: Bribery definition applied correctly beyond cash payments
+            points: 20
+            hint: Does the answer explain that bribery covers any advantage — gifts, hospitality, jobs for family members — and explain the "improper influence" element?
+            question: >
+              Most people think of bribery as handing someone a cash envelope. Explain the legal
+              definition of bribery and why it is much broader than cash payments. Give two
+              examples of non-cash advantages that could constitute a bribe, and explain what
+              makes them a bribe rather than a legitimate business gesture.
+          - criterion: FCPA scope and reach explained correctly
+            points: 20
+            hint: Does the answer correctly explain that FCPA applies to US companies and issuers globally, covers foreign government officials, and reaches non-US companies listed on US exchanges?
+            question: >
+              Explain what the Foreign Corrupt Practices Act (FCPA) prohibits and who it applies
+              to. Does a company need to be based in the US for the FCPA to apply to it? Give a
+              concrete example of conduct that would violate the FCPA's anti-bribery provisions.
+              What is the FCPA's "books and records" provision and why does it matter?
+          - criterion: UK Bribery Act distinguished from FCPA with corporate offence explained
+            points: 20
+            hint: Does the answer correctly explain that the UK Act covers commercial bribery (not just officials), includes the corporate failure-to-prevent offence, and has no facilitation payment exception?
+            question: >
+              Explain two key ways the UK Bribery Act is stricter than the FCPA. What is the
+              "corporate offence of failing to prevent bribery" under Section 7 of the UK Bribery
+              Act, and what is the only defence available to a company charged under it? Why does
+              this create a strong incentive for companies to implement compliance programmes?
+          - criterion: Facilitation payments correctly characterised under both laws
+            points: 20
+            hint: Does the answer correctly state that facilitation payments are illegal under the UK Bribery Act with no exception, and have a narrow exception under FCPA that is practically difficult to use?
+            question: >
+              Explain what a facilitation payment is and give a realistic example. How are
+              facilitation payments treated under the FCPA versus the UK Bribery Act? A
+              colleague tells you that paying a small "processing fee" to a customs official
+              to release a legitimate shipment is just how business is done locally and is
+              legal. How would you respond?
+          - criterion: Passive bribery and personal liability understood
+            points: 20
+            hint: Does the answer correctly explain that receiving a bribe is also a criminal offence, and that individuals — not just companies — face personal criminal liability?
+            question: >
+              Bribery laws apply to both the person who pays and the person who receives.
+              Explain what passive bribery is and give an example from a business context.
+              Can an individual employee face personal criminal liability under anti-bribery laws,
+              or only the company? What personal consequences can a convicted individual face
+              beyond a fine?
+
+      - slug: abc-red-flags
+        number: 2
+        title: "Recognising Red Flags"
+        tagline: "The warning signs are usually visible before the problem becomes serious."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Bribery rarely announces itself. It arrives as a generous gift, an
+          unusually easy contract, a third-party agent with vague responsibilities,
+          or a request to process a payment without documentation.
+
+          Answer the five questions below. Think like a compliance officer — what
+          looks normal but isn't, and why does the context matter?
+        instructions: |
+          Key areas this lesson covers:
+          — Gifts and hospitality: value thresholds, timing, frequency, transparency
+          — Facilitation payments disguised as fees or expenses
+          — Third-party risk: agents, distributors, consultants acting on behalf of the company
+          — Conflicts of interest: undisclosed relationships, personal benefit from a business decision
+          — Unusual payment requests: cash, third-country accounts, split invoices, inflated invoices
+          — Due diligence red flags: agents who won't sign anti-bribery agreements, no verifiable track record
+          — Pressure tactics: "this is how it's done here", urgency, implied threats to the deal
+        rubric:
+          - criterion: Gift and hospitality red flags identified with reasoning
+            points: 20
+            hint: Does the answer identify specific red flags — high value, poor timing, lack of transparency, personal rather than business benefit — and explain why each is concerning?
+            question: >
+              Not all gifts and hospitality are bribes. Describe four factors that would raise
+              a red flag about a gift or hospitality offer in a business context. For each factor,
+              explain specifically what risk it signals. A supplier invites you and your spouse
+              on a five-day international trip shortly before a contract renewal decision. What
+              should you do and why?
+          - criterion: Third-party corruption risk explained correctly
+            points: 20
+            hint: Does the answer explain that companies are liable for bribes paid by agents acting on their behalf, and describe specific due diligence steps?
+            question: >
+              Many bribery prosecutions involve third-party agents — consultants, distributors,
+              or local partners — rather than direct company employees. Explain why this creates
+              legal risk for the company even if no employee personally paid a bribe. What due
+              diligence should a company conduct before engaging a third-party agent in a market
+              with elevated corruption risk?
+          - criterion: Unusual payment red flags identified in scenario
+            points: 20
+            hint: Does the answer identify the specific red flags in the scenario — cash, third-country routing, lack of documentation — and explain what each suggests?
+            question: >
+              A business partner requests that their quarterly payment be made in cash, split
+              across two invoices each just below the reporting threshold, and sent to a bank
+              account in a country where they have no business operations. Identify every red
+              flag in this request, explain what each one suggests, and describe what you should
+              do rather than process the payment.
+          - criterion: '"This is how it''s done here" pressure tactic evaluated'
+            points: 20
+            hint: Does the answer explain that local custom does not create a legal defence and describe how to respond to this pressure professionally?
+            question: >
+              You are working on a government contract in a country with a high corruption
+              perception index. A local partner tells you that a payment to a procurement
+              official is standard practice and that competitors are doing it. They say if
+              you don't, you will lose the contract. Evaluate this argument legally and
+              practically. What should you do, and what should you say to the partner?
+          - criterion: Conflict of interest as a corruption red flag explained
+            points: 20
+            hint: Does the answer explain that undisclosed conflicts of interest are both an ethical violation and a potential corruption indicator, and describe a disclosure process?
+            question: >
+              A procurement manager is responsible for selecting a supplier and has not disclosed
+              that their spouse is a director of one of the bidding companies. Explain why this
+              undisclosed conflict of interest is a serious compliance issue beyond just
+              awkwardness. How does a conflict of interest create a corruption risk even if no
+              explicit payment is made? What should the organisation require in this situation?
+
+      - slug: abc-money-laundering
+        number: 3
+        title: "Money Laundering Basics"
+        tagline: "Clean money is the goal. Knowing the stages means you can spot the signs."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Money laundering is the process of making criminally obtained funds
+          appear legitimate. Understanding the three stages and the red flags
+          at each one helps you recognise when your organisation — or you
+          personally — might be drawn into it.
+
+          Answer the five questions below with specific reasoning. Generic
+          definitions will score lower than applied understanding.
+        instructions: |
+          Key areas this lesson covers:
+          — Three stages: placement (entering the financial system), layering (obscuring the trail), integration (appearing legitimate)
+          — Predicate offences: bribery and corruption proceeds fuel money laundering
+          — Know Your Customer (KYC): verifying identity and beneficial ownership before doing business
+          — Suspicious Activity Reports (SARs): when and how to file, tipping-off offence
+          — Shell companies and beneficial ownership: why they are used and how to look past them
+          — Trade-based money laundering: over/under invoicing, phantom shipments
+          — Personal liability: "wilful blindness" — ignoring obvious signs is not a defence
+        rubric:
+          - criterion: Three stages correctly explained with examples
+            points: 20
+            hint: Does the answer correctly describe placement, layering, and integration — with a concrete example for each — rather than just naming them?
+            question: >
+              Explain the three stages of money laundering — placement, layering, and integration
+              — and give one realistic example of how each stage might occur in practice.
+              At which stage is detection typically easiest, and why? Why is integration the
+              most dangerous stage from a business participation risk perspective?
+          - criterion: KYC purpose and process explained correctly
+            points: 20
+            hint: Does the answer explain that KYC verifies who you are actually doing business with — including beneficial owners, not just listed names — and why this matters for money laundering prevention?
+            question: >
+              Explain what Know Your Customer (KYC) means and why it is important for preventing
+              money laundering. What is a "beneficial owner" and why does identifying them matter
+              beyond just knowing the company name on a contract? Give an example of how a shell
+              company structure could be used to obscure beneficial ownership during a money
+              laundering scheme.
+          - criterion: Suspicious Activity Report obligation explained correctly
+            points: 20
+            hint: Does the answer explain who is required to file a SAR, what triggers the obligation, and what the tipping-off offence is?
+            question: >
+              What is a Suspicious Activity Report (SAR) and who is required to file one? What
+              level of suspicion is required to trigger the obligation — must you be certain that
+              money laundering is occurring? Explain what "tipping off" means and why it is a
+              separate criminal offence to warn a subject that a SAR has been or may be filed
+              about them.
+          - criterion: Wilful blindness correctly applied to scenario
+            points: 20
+            hint: Does the answer correctly explain that deliberately ignoring obvious red flags provides no legal protection and may constitute the mental element for a money laundering offence?
+            question: >
+              A client pays for a large professional services engagement entirely in cash, refuses
+              to provide identification, and says they prefer not to have a paper trail for
+              "commercial reasons." A colleague says: "I didn't ask where the money came from,
+              so I'm not responsible." Evaluate this argument. Explain what "wilful blindness"
+              means legally and how it applies to this situation.
+          - criterion: Trade-based money laundering red flags identified
+            points: 20
+            hint: Does the answer correctly explain over/under-invoicing or phantom shipments and describe what due diligence steps would catch them?
+            question: >
+              Explain what trade-based money laundering is and describe one specific technique
+              used to move value through trade transactions. A supplier submits an invoice for
+              goods at a price significantly above the market rate with no supporting
+              documentation. What red flags does this present, and what steps should your
+              organisation take before processing the payment?
+
+      - slug: abc-your-obligations
+        number: 4
+        title: "Your Obligations"
+        tagline: "Compliance is not someone else's job."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Anti-bribery and anti-money laundering obligations are not just for
+          compliance teams. They attach to individuals — including you — and
+          include active duties to report, to conduct due diligence, and to
+          keep records.
+
+          Answer the five questions below. Think through both what you must do
+          and what happens when you don't.
+        instructions: |
+          Key areas this lesson covers:
+          — Individual reporting obligations: when you must report, to whom, and how
+          — Due diligence responsibilities: your role in checking third parties and transactions
+          — Record keeping: what to document, for how long, why it matters in an investigation
+          — Whistleblower protection: legal protections for good-faith reporting, what they cover
+          — Code of conduct obligations: acknowledging, training, certifying compliance
+          — Consequences of non-compliance: personal criminal liability, termination, debarment
+          — Speak up culture: why silence is not neutral
+        rubric:
+          - criterion: Individual reporting obligation described correctly
+            points: 20
+            hint: Does the answer explain that individuals have an affirmative duty to report — not just an option — and describe who to report to and what information to provide?
+            question: >
+              You suspect that a payment made through your department may have been a bribe.
+              You did not authorise it and are not sure of the details. Describe your obligation
+              in this situation. Who should you report to? Is it sufficient to mention it
+              informally to a colleague, or is something more required? What information should
+              you document before reporting?
+          - criterion: Whistleblower protection scope correctly explained
+            points: 20
+            hint: Does the answer correctly describe what protections exist — against dismissal, demotion, harassment — and explain that these apply to good-faith reports even if unsubstantiated?
+            question: >
+              Explain what whistleblower protection means in the context of anti-bribery reporting.
+              What specific forms of retaliation is a reporter legally protected against? Does
+              the protection apply only if the report turns out to be correct, or does it cover
+              good-faith reports that are investigated and not substantiated? What should you do
+              if you experience retaliation after reporting?
+          - criterion: Record keeping obligation explained with specificity
+            points: 20
+            hint: Does the answer explain what records must be kept — approvals, due diligence, hospitality registers — why accuracy matters, and what falsification of records means legally?
+            question: >
+              Anti-bribery laws often include specific record-keeping requirements alongside the
+              bribery prohibitions. Describe at least three categories of records that a company
+              should maintain to support its anti-bribery compliance programme. Why is accurate
+              record keeping important not just for audits but for individual legal protection?
+              What can happen if records are falsified or destroyed after a suspected violation?
+          - criterion: Personal due diligence responsibility applied to scenario
+            points: 20
+            hint: Does the answer explain that due diligence is not purely a compliance team function, and describe specific steps the individual should take before proceeding?
+            question: >
+              You are asked to approve a payment to a new vendor you have not worked with before.
+              The vendor was introduced by a senior colleague and the contract was negotiated
+              without a standard procurement process. Describe the due diligence steps you should
+              take before approving the payment. Is it sufficient to rely on a senior colleague's
+              introduction? What happens to your position if the payment later turns out to be
+              corrupt?
+          - criterion: Consequences of non-compliance for individuals stated accurately
+            points: 20
+            hint: Does the answer describe personal criminal liability — not just company consequences — including imprisonment, fines, and professional debarment?
+            question: >
+              A manager tells their team: "If anything goes wrong with this deal, the company
+              will handle it — that's what the legal team is for." Explain why this is wrong.
+              What personal consequences can an individual employee face for participating in
+              or concealing bribery, even if acting on instructions from a superior? Does
+              following orders provide a defence?
+
+      - slug: abc-real-world-scenarios
+        number: 5
+        title: "Real-World Scenarios"
+        tagline: "Pressure looks different in practice than in a policy document."
+        difficulty: beginner
+        lesson_type: knowledge
+        challenge: |
+          Anti-bribery knowledge is tested in moments of pressure — when a deal
+          is at risk, a relationship is uncomfortable, or the right answer is
+          inconvenient. These scenarios put you in those moments.
+
+          Answer the five questions below. Walk through your reasoning clearly —
+          what you would do, what you would say, and why.
+        instructions: |
+          Key areas this lesson covers:
+          — Responding to direct bribe requests from officials or counterparties
+          — Managing hospitality and gift situations that approach policy limits
+          — Handling pressure from senior colleagues or business partners to "make it work"
+          — Escalating concerns without damaging business relationships unnecessarily
+          — Documenting interactions that felt improper, even if no payment was made
+          — Navigating high-risk markets and relationship-driven business cultures
+          — Post-incident response: what to do if you discover a historic violation
+        rubric:
+          - criterion: Direct bribe request scenario handled correctly
+            points: 20
+            hint: Does the answer decline clearly, document the interaction, report internally, and avoid aggressive confrontation that could create safety risk or diplomatic incident?
+            question: >
+              You are meeting with a government official to finalise permits for a project.
+              The official makes clear that the permits will be delayed for months unless a
+              "processing contribution" is made to a personal account. The project is on a
+              tight deadline and your manager is counting on this approval. Describe exactly
+              what you would do and say in the meeting, and what steps you would take
+              immediately afterwards.
+          - criterion: Senior pressure scenario navigated with appropriate escalation
+            points: 20
+            hint: Does the answer refuse to authorise the payment, document the conversation, and escalate through appropriate channels — including over the manager's head if necessary?
+            question: >
+              Your manager tells you privately that a payment described in the system as a
+              "consulting fee" was actually made to help secure a contract in a high-risk
+              market, and that you should not ask questions about it when preparing the
+              quarterly accounts. They say this is how the business has always worked and
+              that your job is safe as long as you're a team player. Describe your response,
+              your obligations, and your escalation path.
+          - criterion: Hospitality boundary scenario reasoned through correctly
+            points: 20
+            hint: Does the answer check against policy, consider timing and context — not just value — and describe the approval or refusal process rather than just accepting or refusing outright?
+            question: >
+              A key client invites you to a hospitality box at a major sporting event. The
+              tickets are expensive, the timing coincides with an ongoing procurement decision
+              in which your company is a bidder, and the client mentions your competitor will
+              also be there. Walk through your decision process. What factors matter beyond
+              the monetary value of the invitation? What should you do before accepting or
+              declining?
+          - criterion: Historic violation discovery handled correctly
+            points: 20
+            hint: Does the answer explain that discovery of a historic violation must be reported internally — not concealed — and describe the risk of concealment versus voluntary disclosure?
+            question: >
+              While reviewing old contracts before a merger due diligence process, you discover
+              documentation suggesting that a former employee made improper payments to win a
+              contract three years ago. The employee has since left the company. No one else
+              appears to know. Describe what you should do. What is the risk of doing nothing?
+              What is the potential benefit of voluntary disclosure to the relevant authorities?
+          - criterion: High-risk market documentation habit described correctly
+            points: 20
+            hint: Does the answer describe contemporaneous documentation of interactions — even ones that felt uncomfortable but where no payment was made — and explain why this protects the individual and the company?
+            question: >
+              You regularly travel to markets with elevated corruption risk and interact with
+              government officials as part of your role. No improper payments have ever been
+              made, but you occasionally receive requests or comments that you decline. Describe
+              the documentation habits you should maintain on an ongoing basis. Why is it
+              important to document interactions where you said no, not just transactions that
+              occurred?
