@@ -17,6 +17,7 @@ interface Lesson {
     course_slug: string;
     challenge: string;
     instructions: string;
+    content?: string;
     rubric: RubricItem[];
     max_tokens: number;
 }

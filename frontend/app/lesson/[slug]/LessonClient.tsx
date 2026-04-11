@@ -39,6 +39,7 @@ interface Lesson {
     course_slug: string;
     challenge: string;
     instructions: string;
+    content?: string;
     rubric: RubricItem[];
 }
 
@@ -61,7 +62,7 @@ interface Job {
     complete_count: number;
 }
 
-type Phase = "prompt" | "running" | "reflect" | "answers" | "grading" | "done";
+type Phase = "learn" | "prompt" | "running" | "reflect" | "answers" | "grading" | "done";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -229,7 +230,8 @@ export default function LessonClient({ lesson, backendUrl }: { lesson: Lesson; b
 
     const isKnowledge = lesson.lesson_type === "knowledge";
 
-    const [phase, setPhase]             = useState<Phase>(isKnowledge ? "answers" : "prompt");
+    const initialPhase: Phase = isKnowledge && lesson.content ? "learn" : isKnowledge ? "answers" : "prompt";
+    const [phase, setPhase]             = useState<Phase>(initialPhase);
     const [prompt, setPrompt]           = useState("");
     const [output, setOutput]           = useState("");
     const [answers, setAnswers]         = useState<string[]>(lesson.rubric.map(() => ""));
@@ -338,7 +340,7 @@ export default function LessonClient({ lesson, backendUrl }: { lesson: Lesson; b
 
     const handleReset = () => {
         stopPolling();
-        setPhase(isKnowledge ? "answers" : "prompt");
+        setPhase(isKnowledge && lesson.content ? "learn" : isKnowledge ? "answers" : "prompt");
         setOutput("");
         setAnswers(lesson.rubric.map(() => ""));
         setJob(null);
@@ -393,6 +395,51 @@ export default function LessonClient({ lesson, backendUrl }: { lesson: Lesson; b
             <p className="text-slate-400">{lesson.tagline}</p>
         </div>
     );
+
+    // ── PHASE: learn ────────────────────────────────────────────────────────
+
+    if (phase === "learn" && lesson.content) {
+        return (
+            <div className="min-h-screen bg-rock-bg text-slate-200">
+                <Nav />
+                <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+                    <Header />
+
+                    <div className="rounded-xl border border-rock-yellow/20 bg-rock-yellow/5 p-5 mb-6">
+                        <h2 className="text-xs font-black uppercase tracking-widest text-rock-yellow mb-2">
+                            Overview
+                        </h2>
+                        <p className="text-slate-200 leading-relaxed whitespace-pre-line">{lesson.challenge}</p>
+                    </div>
+
+                    <section aria-labelledby="learn-heading" className="mb-8">
+                        <h2
+                            id="learn-heading"
+                            className="text-xs font-black uppercase tracking-widest text-slate-400 mb-5"
+                        >
+                            Read before you answer
+                        </h2>
+                        <div className="space-y-4 text-slate-300 leading-relaxed text-[15px]">
+                            {lesson.content.trim().split(/\n\n+/).map((para, i) => (
+                                <p key={i}>{para.trim()}</p>
+                            ))}
+                        </div>
+                    </section>
+
+                    <button
+                        onClick={() => setPhase("answers")}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl
+                                   font-black text-sm uppercase tracking-widest
+                                   bg-rock-yellow text-black hover:bg-amber-400
+                                   transition-all active:scale-[0.98]
+                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
+                    >
+                        I&apos;ve read this — Take the test
+                    </button>
+                </main>
+            </div>
+        );
+    }
 
     // ── PHASE: grading ───────────────────────────────────────────────────────
 
@@ -530,7 +577,7 @@ export default function LessonClient({ lesson, backendUrl }: { lesson: Lesson; b
                 {/* Mission */}
                 <section aria-labelledby="mission-heading" className="rounded-xl border border-rock-yellow/20 bg-rock-yellow/5 p-5 mb-6">
                     <h2 id="mission-heading" className="text-xs font-black uppercase tracking-widest text-rock-yellow mb-2">
-                        {isKnowledge ? "The Question" : "Your Mission"}
+                        {isKnowledge ? "Overview" : "Your Mission"}
                     </h2>
                     <p className="text-slate-200 leading-relaxed whitespace-pre-line">{lesson.challenge}</p>
                 </section>

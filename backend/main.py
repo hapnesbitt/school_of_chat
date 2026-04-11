@@ -38,6 +38,29 @@ JOB_TTL = 2 * 3600
 
 r = redis.from_url(REDIS_URL, decode_responses=True)
 
+# Cloud circuit breaker — mirrors arc_stack/ollama_utils.py pattern
+CLOUD_UNAVAILABLE_KEY = "ollama:cloud_unavailable"
+CLOUD_UNAVAILABLE_TTL = 86_400  # 24 hours
+
+ARC_CLOUD_STATUS_URL = "https://arc-codex.com/api/cloud_status"
+
+
+def _is_cloud_available() -> bool:
+    """Returns True if the cloud circuit breaker is not tripped."""
+    try:
+        return not bool(r.exists(CLOUD_UNAVAILABLE_KEY))
+    except Exception:
+        return True
+
+
+def _trip_cloud_breaker() -> None:
+    """Set 24 h Redis key to bypass cloud after a 429 rate-limit response."""
+    try:
+        r.setex(CLOUD_UNAVAILABLE_KEY, CLOUD_UNAVAILABLE_TTL, "1")
+        app.logger.warning("☁️  Cloud circuit breaker OPEN (429 received) — skipping cloud for 24 h")
+    except Exception:
+        pass
+
 # ---------------------------------------------------------------------------
 # Load courses + lessons from YAML
 # ---------------------------------------------------------------------------
@@ -64,11 +87,16 @@ for _course in COURSES:
 
 def _call_ollama(prompt_text: str, timeout: int = 120) -> tuple[str, str]:
     """Try cloud → local → local2. Returns (text, model_used). Raises on total failure."""
-    for model, label in [
+    candidates = [
         (OLLAMA_CLOUD_MODEL, "cloud"),
         (OLLAMA_LOCAL_MODEL, "local"),
         (OLLAMA_LOCAL_MODEL2, "local2"),
-    ]:
+    ]
+    if not _is_cloud_available():
+        app.logger.info("[ollama] cloud circuit breaker open — skipping cloud")
+        candidates = [(m, l) for m, l in candidates if l != "cloud"]
+
+    for model, label in candidates:
         try:
             app.logger.info(f"[ollama] trying {label}: {model}")
             t0 = time.perf_counter()
@@ -84,6 +112,8 @@ def _call_ollama(prompt_text: str, timeout: int = 120) -> tuple[str, str]:
                 if text:
                     app.logger.info(f"[ollama] {label} OK in {elapsed:.0f}ms ({len(text)} chars)")
                     return text, model
+            if resp.status_code == 429 and label == "cloud":
+                _trip_cloud_breaker()
             app.logger.warning(f"[ollama] {label} HTTP {resp.status_code}, trying next")
         except Exception as exc:
             app.logger.warning(f"[ollama] {label} error: {exc}, trying next")
@@ -636,6 +666,15 @@ def generate_dynamic_questions(article_id: str):
 
     title = (article.get("title") or "Untitled").strip()
     text  = (article.get("original_text") or "").strip()[:ARC_TEXT_FOR_GEN]
+
+    # Propagate Arc's cloud circuit breaker — same Ollama instance, no point trying cloud if Arc tripped it
+    try:
+        arc_resp = http_requests.get(ARC_CLOUD_STATUS_URL, timeout=3)
+        if arc_resp.status_code == 200 and not arc_resp.json().get("available", True):
+            _trip_cloud_breaker()
+            app.logger.info("[dynamic_questions] Arc reports cloud unavailable — circuit breaker seeded locally")
+    except Exception:
+        pass  # non-blocking; local breaker state still applies
 
     gen_prompt = f"""You are a reading comprehension instructor. Your job is to create exactly 5 questions that test whether a student has read and understood the following article.
 
