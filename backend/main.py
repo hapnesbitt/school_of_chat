@@ -599,7 +599,7 @@ def _fetch_arc_articles(limit: int = 24) -> list[dict]:
         # English only, must have readable text
         filtered = [
             a for a in articles
-            if (a.get("source_lang") or "en") == "en"
+            if (a.get("source_lang") or "en").lower() in ("en", "english")
             and len(a.get("original_text") or "") > 300
         ][:limit]
         r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
@@ -624,9 +624,9 @@ def list_dynamic_articles():
         summaries.append({
             "id":           _article_id(a),
             "title":        (a.get("title") or "Untitled").strip(),
-            "source":       (a.get("source") or "").strip(),
+            "source":       (a.get("source_name") or a.get("source") or "").strip(),
             "category":     (a.get("category") or "").strip(),
-            "published_at": (a.get("published_at") or a.get("created_at") or "").strip(),
+            "published_at": (a.get("published_at") or a.get("created_at") or a.get("timestamp") or "").strip(),
             "preview":      text[:220] + "…" if len(text) > 220 else text,
             "word_count":   len(text.split()),
         })
