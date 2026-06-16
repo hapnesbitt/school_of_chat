@@ -28,7 +28,7 @@ app = Flask(__name__)
 CORS(app)
 app.logger.setLevel(logging.INFO)
 
-REDIS_URL           = os.getenv("REDIS_URL", "redis://:simplenes@localhost:6379/2")
+REDIS_URL           = os.environ['REDIS_URL']
 OLLAMA_URL          = os.getenv("OLLAMA_URL", "http://192.168.1.185:11434")
 OLLAMA_CLOUD_MODEL  = os.getenv("OLLAMA_CLOUD_MODEL", "devstral-2:123b-cloud")
 OLLAMA_LOCAL_MODEL  = os.getenv("OLLAMA_LOCAL_FALLBACK", "mistral:7b")
