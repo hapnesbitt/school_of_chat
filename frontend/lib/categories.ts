@@ -96,8 +96,20 @@ export const CATEGORIES: Category[] = [
             "Dynamic courses that pull live content and generate questions on the fly using " +
             "the cloud AI model. Requires cloud availability. Reading Comprehension uses real " +
             "cybersecurity articles from Arc Codex — different every time you practice.",
-        courseSlugs: [],
-        includeDynamic: true,
+        // Explicit single-course inclusion — keeps the news-flavored Pop Quiz
+        // course out of this card so it lives in its own (lighter) category.
+        courseSlugs: ["reading-comprehension"],
+    },
+    {
+        slug: "pop-quiz",
+        label: "Pop Quiz",
+        icon: "📰",
+        tagline: "Test yourself on this week's news",
+        description:
+            "Five open-response questions on a real article from the past week. " +
+            "Type your answer; the grader has the article in front of it. General knowledge " +
+            "won't be enough. The light corner of the site — still grounded, still real.",
+        courseSlugs: ["pop-quiz"],
     },
 ];
 

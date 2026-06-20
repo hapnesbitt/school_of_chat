@@ -615,7 +615,10 @@ def _article_id(a: dict) -> str:
 
 @app.route("/api/dynamic/articles")
 def list_dynamic_articles():
-    articles = _fetch_arc_articles()
+    # Optional ?limit= for the Pop Quiz course (7 most recent). Capped at 50
+    # so the public endpoint can't be used as a feed-scrape.
+    limit = max(1, min(50, request.args.get("limit", default=24, type=int)))
+    articles = _fetch_arc_articles(limit=limit)
     if not articles:
         return jsonify({"error": "Could not reach Arc Codex feed"}), 503
     summaries = []

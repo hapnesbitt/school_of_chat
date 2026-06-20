@@ -44,8 +44,9 @@ async function getCourse(slug: string): Promise<Course | null> {
     }
 }
 
-async function getArticles(): Promise<ArticleSummary[]> {
-    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/articles`;
+async function getArticles(limit?: number): Promise<ArticleSummary[]> {
+    const base = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/articles`;
+    const url  = limit ? `${base}?limit=${limit}` : base;
     try {
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) return [];
@@ -76,7 +77,10 @@ function CategoryBadge({ category }: { category: string }) {
 }
 
 async function DynamicCourseContent({ courseSlug }: { courseSlug: string }) {
-    const articles = await getArticles();
+    // Pop Quiz is the news-flavored variant of the dynamic-article flow:
+    // 7 most recent articles instead of 24, and different framing copy.
+    const isPopQuiz = courseSlug === "pop-quiz";
+    const articles  = await getArticles(isPopQuiz ? 7 : undefined);
 
     if (!articles || articles.length === 0) {
         return (
@@ -91,14 +95,19 @@ async function DynamicCourseContent({ courseSlug }: { courseSlug: string }) {
             <div className="rounded-xl border border-rock-yellow/20 bg-rock-yellow/5 px-5 py-4 mb-8">
                 <p className="text-xs text-rock-yellow font-black uppercase tracking-widest mb-1">How this works</p>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                    Select any article below to read it. Once you&apos;re done, Ollama generates 5 comprehension
-                    questions from the article&apos;s content. Answer them, get graded, and pass 3 at 70%+ to earn
-                    your certificate.
+                    {isPopQuiz ? (
+                        <>Pick a story from this week, get five questions about it, answer in your own
+                        words. The grader has the article — general knowledge won&apos;t be enough.</>
+                    ) : (
+                        <>Select any article below to read it. Once you&apos;re done, Ollama generates 5 comprehension
+                        questions from the article&apos;s content. Answer them, get graded, and pass 3 at 70%+ to earn
+                        your certificate.</>
+                    )}
                 </p>
             </div>
 
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">
-                Live articles · {articles.length} available
+                {isPopQuiz ? `This week · ${articles.length} stories` : `Live articles · ${articles.length} available`}
             </h2>
 
             <div className="space-y-3">

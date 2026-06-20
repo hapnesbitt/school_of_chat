@@ -5801,3 +5801,24 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     lessons: []
+
+  # ============================================================
+  # COURSE 17 — Pop Quiz (dynamic, news-flavored)
+  # ============================================================
+  # Same engine as reading-comprehension; the course page detects this
+  # slug and (a) requests only the 7 most recent articles, (b) swaps
+  # in news-framing copy. Light counterpart to the certification-flavored
+  # rest of the site. Still grounded: the grader has the article.
+  - slug: pop-quiz
+    title: "Pop Quiz"
+    tagline: "Five questions on this week's news. Typed answers, AI-graded against the article."
+    description: >
+      Test yourself on this week's news. Pick a story from the past
+      week, get five open-response questions, answer in your own words.
+      The grader has the article in front of it — general knowledge
+      won't be enough.
+    icon: "📰"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    lessons: []
