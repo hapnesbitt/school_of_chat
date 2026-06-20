@@ -6,8 +6,12 @@ backend/venv/
 *.pyc
 __pycache__/
 .env
+.env.*
 frontend/.env.local
 secret/
 logs/
 pids/
 backups/
+*.bak*
+*.pem
+*.key
