@@ -79,6 +79,17 @@ async function getPlants(): Promise<ArticleSummary[]> {
     }
 }
 
+async function getHuntaegis(): Promise<ArticleSummary[]> {
+    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/huntaegis`;
+    try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return [];
+        return res.json();
+    } catch {
+        return [];
+    }
+}
+
 const DIFF_STYLE: Record<string, string> = {
     beginner:     "text-rock-green  border-rock-green/30  bg-rock-green/10",
     intermediate: "text-rock-yellow border-rock-yellow/30 bg-rock-yellow/10",
@@ -128,10 +139,13 @@ function SponsorPill({ sponsor }: { sponsor: Sponsor }) {
 async function DynamicCourseContent({ course }: { course: Course }) {
     const isPopQuiz     = course.slug === "pop-quiz";
     const isPlantBadge  = course.slug === "plant-badge";
+    const isCyberDaily  = course.slug === "cyber-security-daily";
 
     const articles = isPlantBadge
         ? await getPlants()
-        : await getArticles(isPopQuiz ? 7 : undefined);
+        : isCyberDaily
+            ? await getHuntaegis()
+            : await getArticles(isPopQuiz ? 7 : undefined);
 
     if (!articles || articles.length === 0) {
         return (
@@ -153,6 +167,12 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                     ) : isPopQuiz ? (
                         <>Pick a story from this week, get five questions about it, answer in your own
                         words. The grader has the article — general knowledge won&apos;t be enough.</>
+                    ) : isCyberDaily ? (
+                        <>Pick a threat-intel article from today&apos;s Huntaegis feed and read it.
+                        Answer five open-response questions on what it actually said. Pass at 70%+
+                        to log a comprehension badge with your name on it. The grader has the article
+                        — general knowledge alone won&apos;t be enough. This is self-study to help
+                        you stay current — not verification of pen-test competence.</>
                     ) : (
                         <>Select any article below to read it. Once you&apos;re done, Ollama generates 5 comprehension
                         questions from the article&apos;s content. Answer them, get graded, and pass 3 at 70%+ to earn
@@ -179,7 +199,9 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                     ? `Plant catalog · ${articles.length} plants`
                     : isPopQuiz
                         ? `This week · ${articles.length} stories`
-                        : `Live articles · ${articles.length} available`}
+                        : isCyberDaily
+                            ? `Today's threat-intel · ${articles.length} articles`
+                            : `Live articles · ${articles.length} available`}
             </h2>
 
             <div className="space-y-3">

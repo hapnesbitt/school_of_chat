@@ -452,6 +452,8 @@ def _course_article_id_set(course_slug: str) -> set[str]:
     source = _course_article_source(course_slug)
     if source == "plants":
         return {p["id"] for p in _fetch_plant_catalog()}
+    if source == "huntaegis":
+        return {_article_id(a) for a in _fetch_huntaegis_articles()}
     return {_article_id(a) for a in _fetch_arc_articles()}
 
 
@@ -723,6 +725,8 @@ def _save_progress(user_id: str, slug: str, prompt: str, output: str, job: dict)
 ARC_FEED_URL       = "https://arc-codex.com/api/get_feed"
 ARC_PLANTS_URL     = "https://arc-codex.com/api/plants"
 ARC_ARTICLE_URL    = "https://arc-codex.com/api/article"
+HUNTAEGIS_FEED_URL    = "https://huntaegis.com/api/get_feed"
+HUNTAEGIS_ARTICLE_URL = "https://huntaegis.com/api/article"
 ARC_CACHE_TTL      = 1800          # 30 min article list cache
 ARC_QUESTIONS_TTL  = 86400         # 24 hr question cache per article
 ARC_TEXT_FOR_GEN   = 5000          # chars sent to Ollama for question gen
@@ -852,20 +856,72 @@ def _fetch_arc_article_by_id(article_id: str) -> dict | None:
         return None
 
 
+def _fetch_huntaegis_articles(limit: int = 24) -> list[dict]:
+    """Fetch articles from Huntaegis's public feed. Same HTTP boundary
+    SoC uses for arc-codex; Huntaegis is the threat-intel sibling stack.
+    Redis-cached for 30 min."""
+    cache_key = f"soc:huntaegis_feed_cache:{limit}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(HUNTAEGIS_FEED_URL, params={"limit": limit}, timeout=12)
+        resp.raise_for_status()
+        articles = resp.json()
+        if not isinstance(articles, list):
+            return []
+        filtered = [
+            a for a in articles
+            if (a.get("source_lang") or "en").lower() in ("en", "english")
+            and len(a.get("original_text") or "") > 300
+        ][:limit]
+        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
+        return filtered
+    except Exception as exc:
+        app.logger.warning(f"[huntaegis_feed] fetch failed: {exc}")
+        return []
+
+
+def _fetch_huntaegis_article_by_id(article_id: str) -> dict | None:
+    """Direct per-id fetch from Huntaegis. Mirrors the arc-codex per-id
+    helper so cyber-security-daily can resolve an article that just
+    aged out of the latest-24 feed cache. Cached 30 min per id."""
+    cache_key = f"soc:huntaegis_article_cache:{article_id}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(f"{HUNTAEGIS_ARTICLE_URL}/{article_id}", timeout=12)
+        if resp.status_code != 200:
+            return None
+        article = resp.json()
+        if not isinstance(article, dict):
+            return None
+        r.set(cache_key, json.dumps(article), ex=ARC_CACHE_TTL)
+        return article
+    except Exception as exc:
+        app.logger.warning(f"[huntaegis_article] {article_id} fetch failed: {exc}")
+        return None
+
+
 def _resolve_dynamic_article(article_id: str) -> dict | None:
     """Single point for finding an article by id across all dynamic sources.
-    Tries the news feed (existing list cached at limit=24), then the plant
-    catalog, then a direct per-id fetch from arc-codex. The direct fallback
-    lets Quiz Me work on any published article, not just the latest 24."""
-    # 1) News feed (the existing path)
+    Tries the news feed, the plant catalog, the huntaegis feed, then direct
+    per-id fetches from arc-codex and huntaegis. The direct fallbacks let
+    Quiz Me work on any published article, not just the latest 24."""
+    # 1) Arc news feed (the existing path)
     for a in _fetch_arc_articles():
         if _article_id(a) == article_id:
             return a
     # 2) Plant catalog — looked up by id, then text fetched
     if any(p["id"] == article_id for p in _fetch_plant_catalog()):
         return _fetch_plant_article(article_id)
-    # 3) Direct per-id fetch — covers older articles for Quiz Me
-    return _fetch_arc_article_by_id(article_id)
+    # 3) Huntaegis feed cache
+    for a in _fetch_huntaegis_articles():
+        if _article_id(a) == article_id:
+            return a
+    # 4) Direct per-id fetches — covers older articles
+    return _fetch_arc_article_by_id(article_id) or _fetch_huntaegis_article_by_id(article_id)
 
 
 @app.route("/api/dynamic/plants")
@@ -888,6 +944,56 @@ def list_dynamic_plants():
             "published_at": "",
             "preview":      f"{p['common']} — {p['latin']}",
             "word_count":   0,
+        })
+    return jsonify(summaries)
+
+
+def _huntaegis_date_str(article: dict) -> str:
+    """Huntaegis articles carry `timestamp` as ms-since-epoch (int or string
+    of digits); the course-page UI slices the first 10 chars expecting an
+    ISO date. Convert numeric timestamps to YYYY-MM-DD; pass real date
+    strings through unchanged."""
+    raw = article.get("published_at") or article.get("created_at") or article.get("timestamp")
+    if not raw:
+        return ""
+    if isinstance(raw, str):
+        if not raw.isdigit():
+            return raw
+        try:
+            n = int(raw)
+        except Exception:
+            return raw
+    else:
+        try:
+            n = int(raw)
+        except Exception:
+            return ""
+    try:
+        secs = n / 1000 if n > 10**12 else n
+        return time.strftime("%Y-%m-%d", time.gmtime(secs))
+    except Exception:
+        return ""
+
+
+@app.route("/api/dynamic/huntaegis")
+def list_dynamic_huntaegis():
+    """Return summaries from Huntaegis's threat-intel feed for the
+    cyber-security-daily course's article picker. Same shape as
+    /api/dynamic/articles."""
+    articles = _fetch_huntaegis_articles(limit=24)
+    if not articles:
+        return jsonify({"error": "Could not reach Huntaegis feed"}), 503
+    summaries = []
+    for a in articles:
+        text = (a.get("original_text") or "").strip()
+        summaries.append({
+            "id":           _article_id(a),
+            "title":        (a.get("title") or "Untitled").strip(),
+            "source":       (a.get("source_name") or a.get("source") or "").strip(),
+            "category":     (a.get("category") or "").strip(),
+            "published_at": _huntaegis_date_str(a),
+            "preview":      text[:220] + "…" if len(text) > 220 else text,
+            "word_count":   len(text.split()),
         })
     return jsonify(summaries)
 

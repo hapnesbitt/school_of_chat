@@ -112,6 +112,18 @@ export const CATEGORIES: Category[] = [
         courseSlugs: ["pop-quiz"],
     },
     {
+        slug: "cyber-daily",
+        label: "Cyber Security Daily",
+        icon: "🛡️",
+        tagline: "Stay current with today's threat intelligence",
+        description:
+            "Pick today's threat-intel article from the Huntaegis feed and answer five typed " +
+            "questions on it. The grader has the article — general knowledge won't be enough. " +
+            "Comprehension badges with your name on them, one per article. Hosted by Huntaegis. " +
+            "A reading log for staying current — not a credential or competence assessment.",
+        courseSlugs: ["cyber-security-daily"],
+    },
+    {
         slug: "get-certified",
         label: "Get Certified",
         icon: "🌱",

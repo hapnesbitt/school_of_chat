@@ -5870,3 +5870,32 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     lessons: []
+
+  # ============================================================
+  # COURSE 20 — Cyber Security Daily (dynamic, huntaegis-fed, comprehension)
+  # ============================================================
+  # Self-study reading log for staying current with the cyber news cycle.
+  # Same engine as plant-badge: single pass at 70%+ on an article mints a
+  # per-article comprehension badge with the user's Google name on it.
+  # Sourced from Huntaegis's public threat-intel feed over HTTPS.
+  # NOT a credential, NOT verification of pen-test competence — copy on
+  # the course page and category card calls that out explicitly.
+  - slug: cyber-security-daily
+    title: "Cyber Security Daily"
+    tagline: "Five questions on today's threat intelligence. Read, comprehend, mark it done."
+    description: >
+      Each day, pick a threat-intel article and answer five open-response
+      questions on it. The grader has the article — general knowledge alone
+      won't be enough. Earn a comprehension badge for every article you pass.
+      A reading log for staying current with the cyber news cycle — not a
+      credential or a competence assessment.
+    icon: "🛡️"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    article_source: huntaegis
+    sponsor:
+      name: "Huntaegis"
+      url: "https://huntaegis.com"
+      tagline: "Threat intelligence — A.R.C. analysis"
+    lessons: []
