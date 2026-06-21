@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import UserMenu from "@/components/UserMenu";
 import CourseCertificateBanner from "@/components/CourseCertificateBanner";
+import PlantBadgesClient from "@/components/PlantBadgesClient";
 
 interface LessonSummary {
     slug: string;
@@ -12,6 +13,13 @@ interface LessonSummary {
     lesson_type: string;
 }
 
+interface Sponsor {
+    name: string;
+    url?: string;
+    tagline?: string;
+    reward_fine_print?: string;
+}
+
 interface Course {
     slug: string;
     title: string;
@@ -19,6 +27,8 @@ interface Course {
     description: string;
     icon: string;
     lesson_type: string;
+    article_source?: string;
+    sponsor?: Sponsor | null;
     lessons: LessonSummary[];
 }
 
@@ -30,6 +40,8 @@ interface ArticleSummary {
     published_at: string;
     preview: string;
     word_count: number;
+    common?: string;
+    latin?: string;
 }
 
 async function getCourse(slug: string): Promise<Course | null> {
@@ -47,6 +59,17 @@ async function getCourse(slug: string): Promise<Course | null> {
 async function getArticles(limit?: number): Promise<ArticleSummary[]> {
     const base = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/articles`;
     const url  = limit ? `${base}?limit=${limit}` : base;
+    try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return [];
+        return res.json();
+    } catch {
+        return [];
+    }
+}
+
+async function getPlants(): Promise<ArticleSummary[]> {
+    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/plants`;
     try {
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) return [];
@@ -76,11 +99,39 @@ function CategoryBadge({ category }: { category: string }) {
     );
 }
 
-async function DynamicCourseContent({ courseSlug }: { courseSlug: string }) {
-    // Pop Quiz is the news-flavored variant of the dynamic-article flow:
-    // 7 most recent articles instead of 24, and different framing copy.
-    const isPopQuiz = courseSlug === "pop-quiz";
-    const articles  = await getArticles(isPopQuiz ? 7 : undefined);
+function SponsorPill({ sponsor }: { sponsor: Sponsor }) {
+    const inner = (
+        <>
+            <span className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Hosted by</span>
+            <span className="text-rock-yellow font-black">{sponsor.name}</span>
+            {sponsor.tagline && <span className="text-slate-500 text-xs">· {sponsor.tagline}</span>}
+        </>
+    );
+    return sponsor.url ? (
+        <a
+            href={sponsor.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-rock-yellow/20 bg-rock-yellow/5
+                       px-3 py-1.5 hover:border-rock-yellow/40 hover:bg-rock-yellow/10 transition-colors
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
+        >
+            {inner}
+        </a>
+    ) : (
+        <span className="inline-flex items-center gap-2 rounded-full border border-rock-yellow/20 bg-rock-yellow/5 px-3 py-1.5">
+            {inner}
+        </span>
+    );
+}
+
+async function DynamicCourseContent({ course }: { course: Course }) {
+    const isPopQuiz     = course.slug === "pop-quiz";
+    const isPlantBadge  = course.slug === "plant-badge";
+
+    const articles = isPlantBadge
+        ? await getPlants()
+        : await getArticles(isPopQuiz ? 7 : undefined);
 
     if (!articles || articles.length === 0) {
         return (
@@ -95,7 +146,11 @@ async function DynamicCourseContent({ courseSlug }: { courseSlug: string }) {
             <div className="rounded-xl border border-rock-yellow/20 bg-rock-yellow/5 px-5 py-4 mb-8">
                 <p className="text-xs text-rock-yellow font-black uppercase tracking-widest mb-1">How this works</p>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                    {isPopQuiz ? (
+                    {isPlantBadge ? (
+                        <>Pick a plant from the catalog and read its Arc Codex article. Answer five typed
+                        questions. The grader has the article — general knowledge won&apos;t be enough. Pass
+                        at 70%+ and you earn a Plant Merit Badge for that specific plant, with your name on it.</>
+                    ) : isPopQuiz ? (
                         <>Pick a story from this week, get five questions about it, answer in your own
                         words. The grader has the article — general knowledge won&apos;t be enough.</>
                     ) : (
@@ -104,30 +159,58 @@ async function DynamicCourseContent({ courseSlug }: { courseSlug: string }) {
                         your certificate.</>
                     )}
                 </p>
+                {isPlantBadge && course.sponsor?.reward_fine_print && (
+                    <p className="text-[11px] text-slate-600 italic mt-2 leading-relaxed">
+                        Fine print: {course.sponsor.reward_fine_print}.
+                    </p>
+                )}
             </div>
 
+            {/* Plant-badge: show earned badges before the article list (the dopamine loop) */}
+            {isPlantBadge && (
+                <PlantBadgesClient
+                    backendUrl={process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5007"}
+                    courseSlug={course.slug}
+                />
+            )}
+
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">
-                {isPopQuiz ? `This week · ${articles.length} stories` : `Live articles · ${articles.length} available`}
+                {isPlantBadge
+                    ? `Plant catalog · ${articles.length} plants`
+                    : isPopQuiz
+                        ? `This week · ${articles.length} stories`
+                        : `Live articles · ${articles.length} available`}
             </h2>
 
             <div className="space-y-3">
                 {articles.map((article) => (
                     <Link
                         key={article.id}
-                        href={`/course/${courseSlug}/article/${article.id}`}
+                        href={`/course/${course.slug}/article/${article.id}`}
                         className="group block rounded-xl border border-white/10 bg-rock-card
                                    hover:border-rock-yellow/30 hover:bg-[#161616] transition-all p-5
                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
                     >
                         <div className="flex items-start justify-between gap-4 mb-2">
                             <p className="font-bold text-white group-hover:text-rock-yellow transition-colors leading-snug flex-1">
-                                {article.title}
+                                {isPlantBadge && article.common ? (
+                                    <>
+                                        <span>{article.common}</span>
+                                        {article.latin && (
+                                            <span className="font-normal italic text-slate-500 ml-2">{article.latin}</span>
+                                        )}
+                                    </>
+                                ) : (
+                                    article.title
+                                )}
                             </p>
-                            <CategoryBadge category={article.category} />
+                            {!isPlantBadge && <CategoryBadge category={article.category} />}
                         </div>
-                        <p className="text-xs text-slate-500 leading-relaxed mb-3 line-clamp-2">
-                            {article.preview}
-                        </p>
+                        {!isPlantBadge && (
+                            <p className="text-xs text-slate-500 leading-relaxed mb-3 line-clamp-2">
+                                {article.preview}
+                            </p>
+                        )}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 text-[11px] text-slate-600">
                                 {article.source && <span>{article.source}</span>}
@@ -145,7 +228,7 @@ async function DynamicCourseContent({ courseSlug }: { courseSlug: string }) {
                                 )}
                             </div>
                             <span aria-hidden="true" className="text-slate-600 group-hover:text-rock-yellow transition-colors text-xs font-bold shrink-0">
-                                Read & Test →
+                                {isPlantBadge ? "Earn Badge →" : "Read & Test →"}
                             </span>
                         </div>
                     </Link>
@@ -166,6 +249,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseS
 
     const backendUrl   = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5007";
     const isDynamic    = course.lesson_type === "dynamic";
+    const isPlantBadge = course.slug === "plant-badge";
 
     return (
         <div className="min-h-screen bg-rock-bg text-slate-200">
@@ -190,15 +274,21 @@ export default async function CoursePage({ params }: { params: Promise<{ courseS
                 <div className="mb-10">
                     <div aria-hidden="true" className="text-5xl mb-4">{course.icon}</div>
                     <h1 className="text-4xl font-black text-white mb-2 tracking-tighter">{course.title}</h1>
-                    <p className="text-slate-400 leading-relaxed">{course.description}</p>
+                    <p className="text-slate-400 leading-relaxed mb-4">{course.description}</p>
+                    {course.sponsor && (
+                        <div className="mt-3">
+                            <SponsorPill sponsor={course.sponsor} />
+                        </div>
+                    )}
                 </div>
 
-                {/* Certificate banner */}
-                <CourseCertificateBanner backendUrl={backendUrl} courseSlug={course.slug} />
+                {/* Plant badge uses per-article badges (no count≥3 cert banner).
+                    All other dynamic courses use the existing certificate flow. */}
+                {!isPlantBadge && <CourseCertificateBanner backendUrl={backendUrl} courseSlug={course.slug} />}
 
                 {/* Content: article browser or lesson list */}
                 {isDynamic ? (
-                    <DynamicCourseContent courseSlug={courseSlug} />
+                    <DynamicCourseContent course={course} />
                 ) : (
                     <>
                         <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">

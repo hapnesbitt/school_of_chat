@@ -160,12 +160,14 @@ def get_course(course_slug: str):
     if not course:
         return jsonify({"error": "Course not found"}), 404
     return jsonify({
-        "slug":        course["slug"],
-        "title":       course["title"],
-        "tagline":     course["tagline"],
-        "description": course["description"],
-        "icon":        course["icon"],
-        "lesson_type": course.get("lesson_type", ""),
+        "slug":           course["slug"],
+        "title":          course["title"],
+        "tagline":        course["tagline"],
+        "description":    course["description"],
+        "icon":           course["icon"],
+        "lesson_type":    course.get("lesson_type", ""),
+        "article_source": course.get("article_source", ""),
+        "sponsor":        course.get("sponsor") or None,
         "lessons": [
             {
                 "slug":        l["slug"],
@@ -437,6 +439,145 @@ def set_user_name(user_id: str):
 
 
 # ---------------------------------------------------------------------------
+# Per-article badges (plant-badge course and any future article-scoped course).
+# A badge is earned by passing a SINGLE article in the course's article-source
+# set at 70%+. Cleanly separate from the count≥3 certificate flow.
+# ---------------------------------------------------------------------------
+
+def _course_article_id_set(course_slug: str) -> set[str]:
+    """The set of article ids that belong to a course's article-source.
+    For plant-badge that's the curated plant catalog; for news courses it's
+    the current news fetch. Used to gate badge eligibility so a news pass
+    cannot mint a plant badge (and vice versa)."""
+    source = _course_article_source(course_slug)
+    if source == "plants":
+        return {p["id"] for p in _fetch_plant_catalog()}
+    return {_article_id(a) for a in _fetch_arc_articles()}
+
+
+@app.route("/api/badges/<user_id>/<course_slug>")
+def list_badges(user_id: str, course_slug: str):
+    """List all badges earned by a user for a single course. Reads the
+    shared soc:dynamic_pass hash, filtered to the course's article-source."""
+    course = COURSES_BY_SLUG.get(course_slug)
+    if not course:
+        return jsonify({"error": "Course not found"}), 404
+
+    in_course = _course_article_id_set(course_slug)
+    raw_passes = r.hgetall(f"soc:dynamic_pass:{user_id}") or {}
+
+    # Plant lookup for {common, latin} enrichment when relevant
+    plants_by_id = {}
+    if _course_article_source(course_slug) == "plants":
+        plants_by_id = {p["id"]: p for p in _fetch_plant_catalog()}
+
+    badges = []
+    for article_id, val in raw_passes.items():
+        if article_id not in in_course:
+            continue
+        try:
+            d = json.loads(val)
+        except Exception:
+            continue
+        pct = int(d.get("pct", 0))
+        if pct < CERTIFICATE_THRESHOLD_SCORE:
+            continue
+        item = {
+            "article_id": article_id,
+            "title":      d.get("title", article_id),
+            "score":      d.get("score", 0),
+            "pct":        pct,
+        }
+        plant = plants_by_id.get(article_id)
+        if plant:
+            item["common"] = plant["common"]
+            item["latin"]  = plant["latin"]
+        badges.append(item)
+
+    return jsonify({
+        "course_slug":  course_slug,
+        "course_title": course["title"],
+        "sponsor":      course.get("sponsor") or None,
+        "badges":       badges,
+        "count":        len(badges),
+    })
+
+
+@app.route("/api/badge/<user_id>/<course_slug>/<article_id>")
+def get_badge(user_id: str, course_slug: str, article_id: str):
+    """Single-badge detail. Eligible only if the user passed THIS specific
+    article at 70%+ AND the article belongs to the course's article-source."""
+    course = COURSES_BY_SLUG.get(course_slug)
+    if not course:
+        return jsonify({"error": "Course not found"}), 404
+
+    in_course = _course_article_id_set(course_slug)
+    if article_id not in in_course:
+        # Hard 404: the article is outside this course's source — a news pass
+        # cannot mint a plant badge under any circumstances.
+        return jsonify({"error": "Article is not part of this course"}), 404
+
+    raw = r.hget(f"soc:dynamic_pass:{user_id}", article_id)
+    if not raw:
+        return jsonify({
+            "eligible":     False,
+            "course_slug":  course_slug,
+            "course_title": course["title"],
+            "article_id":   article_id,
+            "sponsor":      course.get("sponsor") or None,
+        })
+    try:
+        pass_data = json.loads(raw)
+    except Exception:
+        return jsonify({
+            "eligible":    False,
+            "course_slug": course_slug,
+            "article_id":  article_id,
+        })
+    pct = int(pass_data.get("pct", 0))
+    if pct < CERTIFICATE_THRESHOLD_SCORE:
+        return jsonify({
+            "eligible":     False,
+            "course_slug":  course_slug,
+            "course_title": course["title"],
+            "article_id":   article_id,
+            "pct":          pct,
+            "sponsor":      course.get("sponsor") or None,
+        })
+
+    # Sticky issued date — earned-on stays stable across re-views.
+    date_key  = f"soc:badge_issued:{user_id}:{course_slug}:{article_id}"
+    issued_at = r.get(date_key)
+    if not issued_at:
+        issued_at = time.strftime("%Y-%m-%d")
+        r.set(date_key, issued_at)
+
+    name = r.get(f"soc:name:{user_id}") or ""
+
+    payload = {
+        "eligible":     True,
+        "user_id":      user_id,
+        "course_slug":  course_slug,
+        "course_title": course["title"],
+        "article_id":   article_id,
+        "article_title": pass_data.get("title", article_id),
+        "score":        pass_data.get("score", 0),
+        "pct":          pct,
+        "name":         name,
+        "issued_at":    issued_at,
+        "sponsor":      course.get("sponsor") or None,
+    }
+    # Plant enrichment so the badge can display "Agastache" + "Agastache foeniculum"
+    if _course_article_source(course_slug) == "plants":
+        for p in _fetch_plant_catalog():
+            if p["id"] == article_id:
+                payload["common"] = p["common"]
+                payload["latin"]  = p["latin"]
+                break
+    return jsonify(payload)
+
+
+# ---------------------------------------------------------------------------
 # Background grading
 # ---------------------------------------------------------------------------
 
@@ -578,6 +719,8 @@ def _save_progress(user_id: str, slug: str, prompt: str, output: str, job: dict)
 # ---------------------------------------------------------------------------
 
 ARC_FEED_URL       = "https://arc-codex.com/api/get_feed"
+ARC_PLANTS_URL     = "https://arc-codex.com/api/plants"
+ARC_ARTICLE_URL    = "https://arc-codex.com/api/article"
 ARC_CACHE_TTL      = 1800          # 30 min article list cache
 ARC_QUESTIONS_TTL  = 86400         # 24 hr question cache per article
 ARC_TEXT_FOR_GEN   = 5000          # chars sent to Ollama for question gen
@@ -613,6 +756,118 @@ def _article_id(a: dict) -> str:
     return str(a.get("id") or a.get("article_id") or "")
 
 
+# ---------------------------------------------------------------------------
+# Plant catalog — curated list at arc-codex.com/api/plants, used by the
+# plant-badge course. Same HTTP boundary as the news feed; no arc_stack code
+# imported. The catalog is small (~76 entries) and changes rarely, so 30-min
+# cache is plenty. Per-article text is fetched on demand and cached
+# separately so an article a user picked is hot for their session.
+# ---------------------------------------------------------------------------
+
+def _fetch_plant_catalog() -> list[dict]:
+    """Returns flattened list [{id, title, common, latin}, ...] from arc's
+    plant catalog. Article IDs extracted from the /article/{id} URL."""
+    cache_key = "soc:plants_catalog_cache"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(ARC_PLANTS_URL, timeout=12)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as exc:
+        app.logger.warning(f"[plants] catalog fetch failed: {exc}")
+        return []
+    flat: list[dict] = []
+    for group in ("annuals", "perennials"):
+        for p in data.get(group, []):
+            url = (p.get("url") or "").strip()
+            if "/article/" not in url:
+                continue
+            aid = url.rsplit("/article/", 1)[-1].strip("/")
+            if not aid:
+                continue
+            common = (p.get("common") or "").strip()
+            latin  = (p.get("latin") or "").strip()
+            flat.append({
+                "id":     aid,
+                "title":  f"{common} ({latin})" if common and latin else (common or latin or aid),
+                "common": common,
+                "latin":  latin,
+            })
+    r.set(cache_key, json.dumps(flat), ex=ARC_CACHE_TTL)
+    return flat
+
+
+def _fetch_plant_article(article_id: str) -> dict | None:
+    """Fetch a single plant article (full text + metadata) from arc-codex.
+    Cached 30 min per id."""
+    cache_key = f"soc:plant_article_cache:{article_id}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(f"{ARC_ARTICLE_URL}/{article_id}", timeout=12)
+        if resp.status_code != 200:
+            return None
+        article = resp.json()
+        if not isinstance(article, dict):
+            return None
+        r.set(cache_key, json.dumps(article), ex=ARC_CACHE_TTL)
+        return article
+    except Exception as exc:
+        app.logger.warning(f"[plants] article {article_id} fetch failed: {exc}")
+        return None
+
+
+def _course_article_source(course_slug: str) -> str:
+    """Returns the article-source for a course: 'plants' for the plant-badge
+    course, 'news' otherwise. Read from lessons.yaml `article_source` field
+    so future courses can switch sources without code changes."""
+    c = COURSES_BY_SLUG.get(course_slug, {})
+    return (c.get("article_source") or "news").strip()
+
+
+def _resolve_dynamic_article(article_id: str) -> dict | None:
+    """Single point for finding an article by id across all dynamic sources.
+    Tries the news feed (existing list cached at limit=24), then any larger
+    news limit currently cached, then the plant catalog. Used by article-read,
+    question-gen, and submit-grade routes so they all transparently support
+    plant article ids."""
+    # 1) News feed (the existing path)
+    for a in _fetch_arc_articles():
+        if _article_id(a) == article_id:
+            return a
+    # 2) Plant catalog — looked up by id, then text fetched
+    if any(p["id"] == article_id for p in _fetch_plant_catalog()):
+        return _fetch_plant_article(article_id)
+    return None
+
+
+@app.route("/api/dynamic/plants")
+def list_dynamic_plants():
+    """Return the plant catalog summaries (no article text — just the picker
+    list). The course page for plant-badge calls this to render the article
+    grid. ~76 entries; cached 30 min upstream."""
+    plants = _fetch_plant_catalog()
+    if not plants:
+        return jsonify({"error": "Could not reach Arc Codex plant catalog"}), 503
+    summaries = []
+    for p in plants:
+        summaries.append({
+            "id":           p["id"],
+            "title":        p["title"],
+            "source":       "Arc Codex",
+            "category":     "plants",
+            "common":       p["common"],
+            "latin":        p["latin"],
+            "published_at": "",
+            "preview":      f"{p['common']} — {p['latin']}",
+            "word_count":   0,
+        })
+    return jsonify(summaries)
+
+
 @app.route("/api/dynamic/articles")
 def list_dynamic_articles():
     # Optional ?limit= for the Pop Quiz course (7 most recent). Capped at 50
@@ -638,8 +893,7 @@ def list_dynamic_articles():
 
 @app.route("/api/dynamic/article/<article_id>")
 def get_dynamic_article(article_id: str):
-    articles = _fetch_arc_articles()
-    article  = next((a for a in articles if _article_id(a) == article_id), None)
+    article = _resolve_dynamic_article(article_id)
     if not article:
         return jsonify({"error": "Article not found"}), 404
     text = (article.get("original_text") or "").strip()
@@ -662,8 +916,7 @@ def generate_dynamic_questions(article_id: str):
     if cached:
         return jsonify(json.loads(cached))
 
-    articles = _fetch_arc_articles()
-    article  = next((a for a in articles if _article_id(a) == article_id), None)
+    article = _resolve_dynamic_article(article_id)
     if not article:
         return jsonify({"error": "Article not found"}), 404
 
@@ -737,8 +990,7 @@ def submit_dynamic():
     if not article_id or len(questions) != 5 or len(answers) != 5:
         return jsonify({"error": "Requires article_id, 5 questions, 5 answers"}), 400
 
-    articles = _fetch_arc_articles()
-    article  = next((a for a in articles if _article_id(a) == article_id), None)
+    article = _resolve_dynamic_article(article_id)
     if not article:
         return jsonify({"error": "Article not found"}), 404
 

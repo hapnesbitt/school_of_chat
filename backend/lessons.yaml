@@ -5822,3 +5822,31 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     lessons: []
+
+  # ============================================================
+  # COURSE 18 — Plant Merit Badge (dynamic, plant catalog, per-article badge)
+  # ============================================================
+  # Same engine as reading-comprehension and pop-quiz, but article source
+  # is the curated plant catalog (arc-codex.com/api/plants → ~76 plants).
+  # Earning model is per-plant: pass ONE plant at 70%+ → earn a merit badge
+  # for that specific plant (e.g. "Agastache"). Sponsor block is rendered
+  # on the course page and the badge page; reusable for future sponsors.
+  - slug: plant-badge
+    title: "Plant Merit Badges"
+    tagline: "Pass a real plant article. Earn a merit badge for that plant. With your name on it."
+    description: >
+      Pick a plant from the catalog and read its Arc Codex article. Answer
+      five typed questions. The grader has the article — general knowledge
+      won't be enough. Pass at 70%+ to earn a Plant Merit Badge for that
+      specific plant. Each plant is its own badge.
+    icon: "🌱"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    article_source: plants
+    sponsor:
+      name: "Plantorium"
+      url: "https://plantorium.arc-codex.com"
+      tagline: "Family-grown nursery"
+      reward_fine_print: "Earns you something — maybe needed for a buy-two-get-one"
+    lessons: []

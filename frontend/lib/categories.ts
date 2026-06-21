@@ -111,6 +111,18 @@ export const CATEGORIES: Category[] = [
             "won't be enough. The light corner of the site — still grounded, still real.",
         courseSlugs: ["pop-quiz"],
     },
+    {
+        slug: "get-certified",
+        label: "Get Certified",
+        icon: "🌱",
+        tagline: "Earn a merit badge for what you actually know",
+        description:
+            "Single-article merit badges, sponsor-branded. Pass a real plant article from " +
+            "Arc Codex's catalog and earn a Plant Merit Badge for that specific plant — with " +
+            "your name on it. Hosted by Plantorium. More badge tracks coming as other " +
+            "sponsors come on.",
+        courseSlugs: ["plant-badge"],
+    },
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {
