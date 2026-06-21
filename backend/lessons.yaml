@@ -5850,3 +5850,23 @@ courses:
       tagline: "Family-grown nursery"
       reward_fine_print: "Earns you something — maybe needed for a buy-two-get-one"
     lessons: []
+
+  # ============================================================
+  # COURSE 19 — Quiz Me (dynamic, per-article badge, neutral copy)
+  # ============================================================
+  # Entry point for the "Quiz Me" button on every arc-codex IntelligenceCard.
+  # Same engine as plant-badge: a single pass at 70%+ on an article mints a
+  # per-article badge with the user's Google name on it. No sponsor, no theme;
+  # generalises the per-article credential to any published article.
+  - slug: quiz-me
+    title: "Quiz Me"
+    tagline: "Five questions on this article. Typed answers, AI-graded against the text. Pass once, earn a badge."
+    description: >
+      Quiz Me runs five open-response questions on an article you just read,
+      grades them against the article itself, and mints a personalised badge
+      when you pass at 70%+. Every published article on Arc Codex is fair game.
+    icon: "🎓"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    lessons: []

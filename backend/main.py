@@ -828,12 +828,33 @@ def _course_article_source(course_slug: str) -> str:
     return (c.get("article_source") or "news").strip()
 
 
+def _fetch_arc_article_by_id(article_id: str) -> dict | None:
+    """Direct per-id fetch from arc-codex. Used by Quiz Me when an article
+    is older than the latest news fetch (`_fetch_arc_articles` returns ~24)
+    and isn't in the plant catalog. Cached 30 min per id."""
+    cache_key = f"soc:arc_article_cache:{article_id}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(f"{ARC_ARTICLE_URL}/{article_id}", timeout=12)
+        if resp.status_code != 200:
+            return None
+        article = resp.json()
+        if not isinstance(article, dict):
+            return None
+        r.set(cache_key, json.dumps(article), ex=ARC_CACHE_TTL)
+        return article
+    except Exception as exc:
+        app.logger.warning(f"[arc_article] {article_id} fetch failed: {exc}")
+        return None
+
+
 def _resolve_dynamic_article(article_id: str) -> dict | None:
     """Single point for finding an article by id across all dynamic sources.
-    Tries the news feed (existing list cached at limit=24), then any larger
-    news limit currently cached, then the plant catalog. Used by article-read,
-    question-gen, and submit-grade routes so they all transparently support
-    plant article ids."""
+    Tries the news feed (existing list cached at limit=24), then the plant
+    catalog, then a direct per-id fetch from arc-codex. The direct fallback
+    lets Quiz Me work on any published article, not just the latest 24."""
     # 1) News feed (the existing path)
     for a in _fetch_arc_articles():
         if _article_id(a) == article_id:
@@ -841,7 +862,8 @@ def _resolve_dynamic_article(article_id: str) -> dict | None:
     # 2) Plant catalog — looked up by id, then text fetched
     if any(p["id"] == article_id for p in _fetch_plant_catalog()):
         return _fetch_plant_article(article_id)
-    return None
+    # 3) Direct per-id fetch — covers older articles for Quiz Me
+    return _fetch_arc_article_by_id(article_id)
 
 
 @app.route("/api/dynamic/plants")
