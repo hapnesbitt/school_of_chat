@@ -511,11 +511,13 @@ def get_badge(user_id: str, course_slug: str, article_id: str):
     if not course:
         return jsonify({"error": "Course not found"}), 404
 
-    in_course = _course_article_id_set(course_slug)
-    if article_id not in in_course:
-        # Hard 404: the article is outside this course's source — a news pass
-        # cannot mint a plant badge under any circumstances.
-        return jsonify({"error": "Article is not part of this course"}), 404
+    # quiz-me intentionally has no article-source gate: it credentials any
+    # published arc-codex article. Plant-badge still enforces the gate so a
+    # news pass cannot mint a plant badge.
+    if course_slug != "quiz-me":
+        in_course = _course_article_id_set(course_slug)
+        if article_id not in in_course:
+            return jsonify({"error": "Article is not part of this course"}), 404
 
     raw = r.hget(f"soc:dynamic_pass:{user_id}", article_id)
     if not raw:

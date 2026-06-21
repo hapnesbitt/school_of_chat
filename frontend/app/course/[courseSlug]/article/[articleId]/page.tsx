@@ -26,13 +26,13 @@ async function getArticle(articleId: string): Promise<Article | null> {
 export default async function ArticlePage({
     params,
 }: {
-    params: Promise<{ articleId: string }>;
+    params: Promise<{ courseSlug: string; articleId: string }>;
 }) {
-    const { articleId } = await params;
+    const { courseSlug, articleId } = await params;
     const article = await getArticle(articleId);
     if (!article) notFound();
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5007";
 
-    return <ArticleTestClient article={article} backendUrl={backendUrl} />;
+    return <ArticleTestClient article={article} backendUrl={backendUrl} courseSlug={courseSlug} />;
 }

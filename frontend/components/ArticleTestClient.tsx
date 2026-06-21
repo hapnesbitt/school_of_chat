@@ -130,9 +130,18 @@ function ArticleMetadata({ article }: { article: Article }) {
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function ArticleTestClient({ article, backendUrl }: { article: Article; backendUrl: string }) {
+export default function ArticleTestClient({ article, backendUrl, courseSlug }: { article: Article; backendUrl: string; courseSlug: string }) {
     const { data: session } = useSession();
     const router            = useRouter();
+
+    // Quiz Me is the one course wired as "single pass → per-article badge".
+    // Plant-badge has the same shape but its post-pass UX intentionally goes
+    // through the existing reading-comprehension cert screen, so we only
+    // branch here for quiz-me.
+    const isQuizMe    = courseSlug === 'quiz-me';
+    const successHref = isQuizMe
+        ? `/badge/${session?.user?.id ?? "anonymous"}/quiz-me/${article.id}`
+        : `/certificate/${session?.user?.id ?? "anonymous"}/reading-comprehension`;
 
     const [phase, setPhase]             = useState<Phase>("reading");
     const [questions, setQuestions]     = useState<Question[]>([]);
@@ -175,10 +184,10 @@ export default function ArticleTestClient({ article, backendUrl }: { article: Ar
         const pct = job.total_possible > 0 ? Math.round((job.total_earned / job.total_possible) * 100) : 0;
         if (pct >= 70 && userId !== "anonymous") {
             setRedirecting(true);
-            const t = setTimeout(() => router.push(`/certificate/${userId}/reading-comprehension`), 3500);
+            const t = setTimeout(() => router.push(successHref), 3500);
             return () => clearTimeout(t);
         }
-    }, [phase, job, userId, router]);
+    }, [phase, job, userId, router, successHref]);
 
     // ── Handlers ──────────────────────────────────────────────────────────
 
@@ -357,21 +366,23 @@ export default function ArticleTestClient({ article, backendUrl }: { article: Ar
                                 <span aria-hidden="true">🏆 </span>Article passed!
                             </p>
                             <p role="status" aria-live="polite" className="text-slate-400 text-sm mb-4">
-                                {redirecting ? "Checking your certificate…" : "Pass 3 articles at 70+ to earn your certificate."}
+                                {redirecting
+                                    ? (isQuizMe ? "Minting your badge…" : "Checking your certificate…")
+                                    : (isQuizMe ? "Your badge is ready ✓" : "Pass 3 articles at 70+ to earn your certificate.")}
                             </p>
                             {redirecting ? (
-                                <div role="status" aria-label="Redirecting to certificate page">
+                                <div role="status" aria-label={isQuizMe ? "Redirecting to badge page" : "Redirecting to certificate page"}>
                                     <RefreshCw aria-hidden="true" className="h-5 w-5 text-rock-yellow animate-spin mx-auto" />
-                                    <span className="sr-only">Loading certificate…</span>
+                                    <span className="sr-only">{isQuizMe ? "Loading badge…" : "Loading certificate…"}</span>
                                 </div>
                             ) : (
                                 <Link
-                                    href={`/certificate/${userId}/reading-comprehension`}
+                                    href={successHref}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-black text-sm
                                                bg-rock-yellow text-black hover:bg-amber-400 transition-all
                                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
                                 >
-                                    Check certificate →
+                                    {isQuizMe ? "View your badge →" : "Check certificate →"}
                                 </Link>
                             )}
                         </div>
