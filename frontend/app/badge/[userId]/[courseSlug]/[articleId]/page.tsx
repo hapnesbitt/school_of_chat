@@ -147,6 +147,21 @@ export default async function BadgePage({
                                 </div>
                             </div>
 
+                            {isPlantBadge && badge.sponsor?.reward_fine_print && (
+                                <div
+                                    role="img"
+                                    aria-label={`Coupon — ${badge.sponsor.reward_fine_print}`}
+                                    className="rounded-xl border-2 border-dashed border-rock-yellow bg-rock-yellow/10 px-5 py-4 mb-6 text-center"
+                                >
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-rock-yellow/80 mb-1">
+                                        🎟️ Coupon — show this at checkout
+                                    </p>
+                                    <p className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug">
+                                        {badge.sponsor.reward_fine_print}
+                                    </p>
+                                </div>
+                            )}
+
                             {badge.sponsor && (
                                 <div className="border-t border-white/10 pt-6 mt-2">
                                     <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-2">Sponsored by</p>
@@ -166,11 +181,8 @@ export default async function BadgePage({
                                     {badge.sponsor.tagline && (
                                         <p className="text-xs text-slate-500 mt-1">{badge.sponsor.tagline}</p>
                                     )}
-                                    {badge.sponsor.reward_fine_print && (
-                                        <p className="text-[10px] italic text-slate-600 mt-3 max-w-md mx-auto leading-relaxed">
-                                            {badge.sponsor.reward_fine_print}
-                                        </p>
-                                    )}
+                                    {/* reward_fine_print is rendered prominently in the
+                                        coupon strip above; not repeated here. */}
                                 </div>
                             )}
                         </div>

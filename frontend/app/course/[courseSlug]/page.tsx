@@ -171,6 +171,27 @@ async function DynamicCourseContent({ course }: { course: Course }) {
 
     return (
         <>
+            {/* Plant-badge: lead with the coupon, the in-store payoff a customer
+                came to earn. Other dynamic courses don't ship a sponsor reward
+                so the strip simply doesn't render for them. */}
+            {isPlantBadge && course.sponsor?.reward_fine_print && (
+                <div
+                    role="img"
+                    aria-label={`Coupon — ${course.sponsor.reward_fine_print}`}
+                    className="rounded-xl border-2 border-dashed border-rock-yellow bg-rock-yellow/10 px-5 py-4 mb-4 flex items-center gap-4"
+                >
+                    <span aria-hidden="true" className="text-3xl shrink-0">🎟️</span>
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-rock-yellow/80 mb-0.5">
+                            Earn this coupon
+                        </p>
+                        <p className="text-base font-black text-white tracking-tight leading-snug">
+                            {course.sponsor.reward_fine_print}
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="rounded-xl border border-rock-yellow/20 bg-rock-yellow/5 px-5 py-4 mb-8">
                 <p className="text-xs text-rock-yellow font-black uppercase tracking-widest mb-1">How this works</p>
                 <p className="text-sm text-slate-400 leading-relaxed">
@@ -200,11 +221,6 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                         your certificate.</>
                     )}
                 </p>
-                {isPlantBadge && course.sponsor?.reward_fine_print && (
-                    <p className="text-[11px] text-slate-600 italic mt-2 leading-relaxed">
-                        Fine print: {course.sponsor.reward_fine_print}.
-                    </p>
-                )}
             </div>
 
             {/* Plant-badge: show earned badges before the article list (the dopamine loop) */}
