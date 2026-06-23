@@ -137,6 +137,19 @@ export const CATEGORIES: Category[] = [
         courseSlugs: ["financial-daily"],
     },
     {
+        slug: "new-machine",
+        label: "School for a New Machine",
+        icon: "🧠",
+        tagline: "Daily readings on AI, alignment, and the philosophy of mind",
+        description:
+            "Pick an article on AI, alignment, consciousness, or the philosophy of mind from " +
+            "the Arc Codex feed and answer five typed questions on it. The grader has the article " +
+            "— general knowledge won't be enough. Comprehension badges with your name on them, " +
+            "one per article. Self-study to think clearly about AI and the questions around it " +
+            "— not a credential or competence assessment.",
+        courseSlugs: ["new-machine"],
+    },
+    {
         slug: "get-certified",
         label: "Get Certified",
         icon: "🌱",

@@ -456,6 +456,8 @@ def _course_article_id_set(course_slug: str) -> set[str]:
         return {_article_id(a) for a in _fetch_huntaegis_articles()}
     if source == "arc-finance":
         return {_article_id(a) for a in _fetch_arc_finance_articles()}
+    if source == "arc-ai":
+        return {_article_id(a) for a in _fetch_arc_ai_articles()}
     return {_article_id(a) for a in _fetch_arc_articles()}
 
 
@@ -885,6 +887,77 @@ def _fetch_arc_finance_articles(limit: int = 24) -> list[dict]:
         return []
 
 
+# ---------------------------------------------------------------------------
+# School for a New Machine — AI / alignment / consciousness / philosophy.
+#
+# Unlike finance (one clean `economic_finance` category), this topic does NOT
+# map to any single category or directive in arc-codex's taxonomy. On-topic
+# articles are SCATTERED across ~14 directives (the best alignment pieces are
+# tagged "Geopolitics" or "Crisis Event Monitoring"; Ross's own deep pieces are
+# tagged "Manual"), and the nominal "AI Developments and Discourse" directive
+# is only ~50% on-topic (it includes EV reviews, art shows, a fund named
+# "Align"). So we cannot reuse the finance one-line category filter.
+#
+# Instead we run a precision-first keyword classifier over a wide feed window:
+# an article qualifies if its TITLE matches a strong AI/alignment/philosophy
+# term, OR its lead text carries TWO distinct on-topic terms. Title-anchoring
+# keeps precision ~90% while still recovering on-topic articles the directive
+# filter would miss. Same fetch+filter HTTP boundary as finance — no taxonomy
+# changes, no hand-curated id list.
+_AI_TERMS = re.compile(
+    r"(artificial intelligence|machine learning|\bLLM\b|\bLLMs\b|\bGPT|ChatGPT|"
+    r"OpenAI|Anthropic|\bClaude\b|Gemini|\bAGI\b|\balignment\b|superintellig|"
+    r"neural net|generative AI|chatbot|agentic|model inference|\bOllama\b|"
+    r"consciousness|sentien|philosophy of mind|epistem|frontier model|"
+    r"reward hacking|interpretability|large language model)",
+    re.I,
+)
+
+
+def _is_ai_article(a: dict) -> bool:
+    """Precision-first predicate for the School for a New Machine course.
+    True if the title carries a strong on-topic term, or the lead text
+    carries at least THREE distinct on-topic terms. The title anchor gives
+    high precision; the 3-distinct-term body rule recovers genuinely on-topic
+    pieces with a vague title (an article actually about AI mentions many
+    distinct terms) while rejecting off-topic pieces that name-drop 'AI' once
+    or twice in passing."""
+    title = a.get("title") or ""
+    if _AI_TERMS.search(title):
+        return True
+    lead = (a.get("original_text") or "")[:1500]
+    hits = {m.group(0).lower() for m in _AI_TERMS.finditer(lead)}
+    return len(hits) >= 3
+
+
+def _fetch_arc_ai_articles(limit: int = 24) -> list[dict]:
+    """Fetch arc-codex articles classified as AI / alignment / consciousness /
+    philosophy. Arc-codex's taxonomy can't select this topic cleanly, so we
+    pull a wide window and apply a precision-first keyword classifier
+    (_is_ai_article) client-side. Redis-cached for 30 min."""
+    cache_key = f"soc:arc_ai_cache:{limit}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(ARC_FEED_URL, params={"limit": 100}, timeout=12)
+        resp.raise_for_status()
+        articles = resp.json()
+        if not isinstance(articles, list):
+            return []
+        filtered = [
+            a for a in articles
+            if _is_ai_article(a)
+            and (a.get("source_lang") or "en").lower() in ("en", "english")
+            and len(a.get("original_text") or "") > 300
+        ][:limit]
+        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
+        return filtered
+    except Exception as exc:
+        app.logger.warning(f"[arc_ai] fetch failed: {exc}")
+        return []
+
+
 def _fetch_huntaegis_articles(limit: int = 24) -> list[dict]:
     """Fetch articles from Huntaegis's public feed. Same HTTP boundary
     SoC uses for arc-codex; Huntaegis is the threat-intel sibling stack.
@@ -954,6 +1027,10 @@ def _resolve_dynamic_article(article_id: str) -> dict | None:
     for a in _fetch_arc_finance_articles():
         if _article_id(a) == article_id:
             return a
+    # 4b) Arc-codex AI-classified cache (School for a New Machine).
+    for a in _fetch_arc_ai_articles():
+        if _article_id(a) == article_id:
+            return a
     # 5) Direct per-id fetches — covers older articles
     return _fetch_arc_article_by_id(article_id) or _fetch_huntaegis_article_by_id(article_id)
 
@@ -1017,6 +1094,29 @@ def list_dynamic_finance():
     articles = _fetch_arc_finance_articles(limit=24)
     if not articles:
         return jsonify({"error": "Could not reach Arc Codex finance feed"}), 503
+    summaries = []
+    for a in articles:
+        text = (a.get("original_text") or "").strip()
+        summaries.append({
+            "id":           _article_id(a),
+            "title":        (a.get("title") or "Untitled").strip(),
+            "source":       (a.get("source_name") or a.get("source") or "").strip(),
+            "category":     (a.get("category") or "").strip(),
+            "published_at": _huntaegis_date_str(a),
+            "preview":      text[:220] + "…" if len(text) > 220 else text,
+            "word_count":   len(text.split()),
+        })
+    return jsonify(summaries)
+
+
+@app.route("/api/dynamic/ai")
+def list_dynamic_ai():
+    """Return summaries from arc-codex's feed classified as AI / alignment /
+    consciousness / philosophy, for the School for a New Machine course's
+    article picker. Same shape as /api/dynamic/articles."""
+    articles = _fetch_arc_ai_articles(limit=24)
+    if not articles:
+        return jsonify({"error": "Could not reach Arc Codex AI feed"}), 503
     summaries = []
     for a in articles:
         text = (a.get("original_text") or "").strip()

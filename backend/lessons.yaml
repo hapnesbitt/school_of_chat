@@ -5927,3 +5927,38 @@ courses:
     lesson_type: dynamic
     article_source: arc-finance
     lessons: []
+
+  # ============================================================
+  # COURSE 22 — School for a New Machine (dynamic, arc-codex AI, comprehension)
+  # ============================================================
+  # Self-study reading log on AI, alignment, consciousness, and the
+  # philosophy of mind. Same engine as financial-daily and plant-badge:
+  # single pass at 70%+ on an article mints a per-article comprehension
+  # badge with the user's Google name on it.
+  #
+  # SELECTION NOTE: unlike finance (clean economic_finance category), this
+  # topic does NOT map to any single arc-codex category or directive — on-
+  # topic articles are scattered across ~14 directives and the nominal "AI
+  # Developments" directive is only ~50% on-topic. So article_source 'arc-ai'
+  # is backed by a precision-first KEYWORD CLASSIFIER (_fetch_arc_ai_articles
+  # / _is_ai_article in main.py), not a category filter.
+  #
+  # NOT a credential or competence assessment — copy on the course page and
+  # category card calls that out explicitly. The name plays on "The Soul of
+  # a New Machine"; the tagline carries the plain "what it is."
+  - slug: new-machine
+    title: "School for a New Machine"
+    tagline: "Daily readings on AI, alignment, consciousness, and the philosophy of mind."
+    description: >
+      Each day, pick an article on AI, alignment, consciousness, or the
+      philosophy of mind and answer five open-response questions on it. The
+      grader has the article — general knowledge alone won't be enough. Earn
+      a comprehension badge for every article you pass. Self-study to think
+      clearly about AI and the questions around it — not a credential or a
+      competence assessment.
+    icon: "🧠"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    article_source: arc-ai
+    lessons: []

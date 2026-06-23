@@ -101,6 +101,17 @@ async function getFinance(): Promise<ArticleSummary[]> {
     }
 }
 
+async function getAI(): Promise<ArticleSummary[]> {
+    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/ai`;
+    try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return [];
+        return res.json();
+    } catch {
+        return [];
+    }
+}
+
 const DIFF_STYLE: Record<string, string> = {
     beginner:     "text-rock-green  border-rock-green/30  bg-rock-green/10",
     intermediate: "text-rock-yellow border-rock-yellow/30 bg-rock-yellow/10",
@@ -152,6 +163,7 @@ async function DynamicCourseContent({ course }: { course: Course }) {
     const isPlantBadge       = course.slug === "plant-badge";
     const isCyberDaily       = course.slug === "cyber-security-daily";
     const isFinancialDaily   = course.slug === "financial-daily";
+    const isNewMachine       = course.slug === "new-machine";
 
     const articles = isPlantBadge
         ? await getPlants()
@@ -159,7 +171,9 @@ async function DynamicCourseContent({ course }: { course: Course }) {
             ? await getHuntaegis()
             : isFinancialDaily
                 ? await getFinance()
-                : await getArticles(isPopQuiz ? 7 : undefined);
+                : isNewMachine
+                    ? await getAI()
+                    : await getArticles(isPopQuiz ? 7 : undefined);
 
     if (!articles || articles.length === 0) {
         return (
@@ -215,6 +229,13 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                         — general knowledge alone won&apos;t be enough. This is self-study to help
                         you stay current with the financial news cycle — not a credential, professional
                         qualification, or regulatory competence assessment.</>
+                    ) : isNewMachine ? (
+                        <>Pick an article on AI, alignment, consciousness, or the philosophy of mind
+                        from today&apos;s Arc Codex feed and read it. Answer five open-response questions
+                        on what it actually said. Pass at 70%+ to log a comprehension badge with your
+                        name on it. The grader has the article — general knowledge alone won&apos;t be
+                        enough. This is self-study to help you think clearly about AI and the questions
+                        around it — not a credential or a competence assessment.</>
                     ) : (
                         <>Select any article below to read it. Once you&apos;re done, Ollama generates 5 comprehension
                         questions from the article&apos;s content. Answer them, get graded, and pass 3 at 70%+ to earn
@@ -240,7 +261,9 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                             ? `Today's threat-intel · ${articles.length} articles`
                             : isFinancialDaily
                                 ? `Today's financial news · ${articles.length} articles`
-                                : `Live articles · ${articles.length} available`}
+                                : isNewMachine
+                                    ? `Today's readings · ${articles.length} articles`
+                                    : `Live articles · ${articles.length} available`}
             </h2>
 
             <div className="space-y-3">

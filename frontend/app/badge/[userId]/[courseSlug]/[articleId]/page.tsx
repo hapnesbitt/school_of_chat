@@ -56,7 +56,7 @@ export default async function BadgePage({
     // styling and "Plant Merit Badge" header; every other dynamic course
     // gets a neutral label derived from the course title returned by the API.
     const isPlantBadge = courseSlug === "plant-badge";
-    const headerIcon   = isPlantBadge ? "🌱" : (badge.course_slug === "cyber-security-daily" ? "🛡️" : "🎓");
+    const headerIcon   = isPlantBadge ? "🌱" : (badge.course_slug === "cyber-security-daily" ? "🛡️" : (badge.course_slug === "new-machine" ? "🧠" : "🎓"));
     const headerLabel  = isPlantBadge ? "Plant Merit Badge" : (badge.course_title || "Comprehension Badge");
     const fallbackName = isPlantBadge ? "Plant Apprentice" : "Scholar";
     const courseLabel  = badge.course_title || "this course";
