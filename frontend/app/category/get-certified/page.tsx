@@ -13,7 +13,7 @@ import type { Course } from "@/components/CourseCard";
 // The demo plant the "Try the demo →" CTA targets. Agastache foeniculum —
 // recognisable pollinator favourite, 618-word article, makes a strong
 // five-question quiz.
-const DEMO_PLANT_ID    = "438d88c486bb09e57da1e069116e94f3";
+const DEMO_PLANT_ID    = "438d88c46b1c4c761e3c68e99778a8d0";
 const DEMO_PLANT_LABEL = "Agastache foeniculum";
 const DEMO_PLANT_URL   = `https://soc.arc-codex.com/course/plant-badge/article/${DEMO_PLANT_ID}`;
 
