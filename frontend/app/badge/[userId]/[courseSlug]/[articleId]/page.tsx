@@ -52,15 +52,26 @@ export default async function BadgePage({
         }).catch(() => {});
     }
 
+    // Per-course visual + label config. Plant-badge keeps its botanical
+    // styling and "Plant Merit Badge" header; every other dynamic course
+    // gets a neutral label derived from the course title returned by the API.
+    const isPlantBadge = courseSlug === "plant-badge";
+    const headerIcon   = isPlantBadge ? "🌱" : (badge.course_slug === "cyber-security-daily" ? "🛡️" : "🎓");
+    const headerLabel  = isPlantBadge ? "Plant Merit Badge" : (badge.course_title || "Comprehension Badge");
+    const fallbackName = isPlantBadge ? "Plant Apprentice" : "Scholar";
+    const courseLabel  = badge.course_title || "this course";
+    const backLabel    = isPlantBadge ? "Back to plant catalog" : `Back to ${courseLabel}`;
+
     if (!badge.eligible) {
         return (
             <div className="min-h-screen bg-rock-bg flex items-center justify-center px-6">
                 <main className="max-w-md w-full text-center">
-                    <div aria-hidden="true" className="text-5xl mb-6">🌱</div>
+                    <div aria-hidden="true" className="text-5xl mb-6">{headerIcon}</div>
                     <h1 className="text-2xl font-black text-white mb-3">Not earned yet</h1>
                     <p className="text-slate-400 mb-2">
-                        This Plant Merit Badge isn&apos;t in the bag yet — pass this plant&apos;s quiz at
-                        70%+ to earn it.
+                        {isPlantBadge
+                            ? <>This Plant Merit Badge isn&apos;t in the bag yet — pass this plant&apos;s quiz at 70%+ to earn it.</>
+                            : <>This badge isn&apos;t earned yet — pass this article&apos;s quiz at 70%+ to earn it.</>}
                     </p>
                     <Link
                         href={`/course/${courseSlug}`}
@@ -68,36 +79,39 @@ export default async function BadgePage({
                                    bg-rock-yellow text-black hover:bg-amber-400 transition-all
                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
                     >
-                        Back to plant catalog
+                        {backLabel}
                     </Link>
                 </main>
             </div>
         );
     }
 
-    const displayName = sessionName || badge.name || "Plant Apprentice";
+    const displayName = sessionName || badge.name || fallbackName;
     const [y, m, d] = (badge.issued_at ?? "").split("-");
     const dateStr   = y && m && d
         ? new Date(Number(y), Number(m) - 1, Number(d))
             .toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
         : "";
+    // Plant badge uses the botanical common/latin display; every other
+    // course shows the article title.
     const plantCommon = badge.common ?? badge.article_title ?? "Plant";
     const plantLatin  = badge.latin ?? "";
+    const subjectTitle = isPlantBadge ? plantCommon : (badge.article_title || courseLabel);
 
     return (
         <div className="min-h-screen bg-rock-bg flex flex-col items-center justify-center px-6 py-16">
             <main className="w-full max-w-2xl">
-                <article aria-label={`Plant Merit Badge — ${plantCommon} — for ${displayName}`}>
+                <article aria-label={`${headerLabel} — ${subjectTitle} — for ${displayName}`}>
                     <div className="relative rounded-2xl border-2 border-rock-green/40 bg-[#0d0d0d] shadow-2xl overflow-hidden">
                         <div aria-hidden="true" className="h-1.5 w-full bg-gradient-to-r from-rock-green via-rock-yellow to-rock-green" />
 
                         <div className="px-10 py-12 text-center">
-                            <div aria-hidden="true" className="text-5xl mb-3">🌱</div>
+                            <div aria-hidden="true" className="text-5xl mb-3">{headerIcon}</div>
                             <p className="text-xs font-black uppercase tracking-[0.3em] text-rock-green/80 mb-1">
                                 School of Chat
                             </p>
                             <p className="text-[10px] uppercase tracking-widest text-slate-600 mb-10">
-                                Plant Merit Badge
+                                {headerLabel}
                             </p>
 
                             <p className="text-slate-400 text-sm mb-3">Awarded to</p>
@@ -105,9 +119,9 @@ export default async function BadgePage({
                                 {displayName}
                             </h1>
 
-                            <p className="text-slate-400 text-sm mb-1">for demonstrating knowledge of</p>
-                            <p className="text-2xl sm:text-3xl font-black text-rock-yellow mb-1">{plantCommon}</p>
-                            {plantLatin && (
+                            <p className="text-slate-400 text-sm mb-1">for demonstrating comprehension of</p>
+                            <p className="text-2xl sm:text-3xl font-black text-rock-yellow mb-1">{subjectTitle}</p>
+                            {isPlantBadge && plantLatin && (
                                 <p className="text-sm italic text-slate-400 mb-8">{plantLatin}</p>
                             )}
 
@@ -171,7 +185,7 @@ export default async function BadgePage({
                         className="text-sm text-slate-500 hover:text-slate-300 transition-colors
                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow rounded"
                     >
-                        ← Back to plant catalog
+                        ← {backLabel}
                     </Link>
                     <span aria-hidden="true" className="text-white/10">|</span>
                     <PrintButton />

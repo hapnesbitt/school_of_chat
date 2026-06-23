@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Zap, Send, CheckCircle, Circle, ChevronDown, ChevronUp, RefreshCw, AlertCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, Zap, Send, CheckCircle, Circle, ChevronDown, ChevronUp, RefreshCw, AlertCircle, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserMenu from "@/components/UserMenu";
 
@@ -105,7 +105,20 @@ function CriterionRow({ item }: { item: JobCriterion }) {
     );
 }
 
-function ArticleMetadata({ article }: { article: Article }) {
+// Map a courseSlug to the article's source platform (the SoC site that hosts
+// the canonical article page). Used to render the "Read on X →" link below.
+// Plant-badge and arc-finance live on arc-codex; cyber-security-daily lives
+// on Huntaegis. Everything else is arc-codex.
+function sourcePlatformFor(courseSlug: string): { host: string; label: string } {
+    if (courseSlug === "cyber-security-daily") {
+        return { host: "https://huntaegis.com", label: "Huntaegis" };
+    }
+    return { host: "https://arc-codex.com", label: "Arc Codex" };
+}
+
+function ArticleMetadata({ article, courseSlug }: { article: Article; courseSlug: string }) {
+    const platform = sourcePlatformFor(courseSlug);
+    const sourceHref = `${platform.host}/article/${article.id}`;
     return (
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-4">
             {article.category && (
@@ -122,6 +135,18 @@ function ArticleMetadata({ article }: { article: Article }) {
                     <span>{article.word_count} words</span>
                 </>
             )}
+            <span aria-hidden="true">·</span>
+            <a
+                href={sourceHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-rock-yellow/80 hover:text-rock-yellow font-bold
+                           focus-visible:outline-none focus-visible:underline"
+                aria-label={`Read this article on ${platform.label} (opens in a new tab)`}
+            >
+                Read on {platform.label}
+                <ExternalLink aria-hidden="true" className="h-3 w-3" />
+            </a>
         </div>
     );
 }
@@ -441,7 +466,7 @@ export default function ArticleTestClient({ article, backendUrl, courseSlug }: {
                         {articleOpen && (
                             <div id="article-reference" role="region" aria-label="Article text for reference">
                                 <div className="px-5 pb-2 border-t border-white/5">
-                                    <ArticleMetadata article={article} />
+                                    <ArticleMetadata article={article} courseSlug={courseSlug} />
                                 </div>
                                 <div className="px-5 pb-5 max-h-80 overflow-y-auto text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
                                     {article.text}
@@ -529,7 +554,7 @@ export default function ArticleTestClient({ article, backendUrl, courseSlug }: {
         <div className="min-h-screen bg-rock-bg text-slate-200">
             <Nav />
             <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-                <ArticleMetadata article={article} />
+                <ArticleMetadata article={article} courseSlug={courseSlug} />
                 <h1 className="text-3xl sm:text-4xl font-black text-white mb-6 tracking-tight leading-tight">
                     {article.title}
                 </h1>

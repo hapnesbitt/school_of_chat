@@ -454,6 +454,8 @@ def _course_article_id_set(course_slug: str) -> set[str]:
         return {p["id"] for p in _fetch_plant_catalog()}
     if source == "huntaegis":
         return {_article_id(a) for a in _fetch_huntaegis_articles()}
+    if source == "arc-finance":
+        return {_article_id(a) for a in _fetch_arc_finance_articles()}
     return {_article_id(a) for a in _fetch_arc_articles()}
 
 
@@ -856,6 +858,33 @@ def _fetch_arc_article_by_id(article_id: str) -> dict | None:
         return None
 
 
+def _fetch_arc_finance_articles(limit: int = 24) -> list[dict]:
+    """Fetch arc-codex articles filtered to the economic_finance category.
+    Arc-codex's feed doesn't accept a directive/category param, so we
+    pull a wider window and filter client-side. Redis-cached for 30 min."""
+    cache_key = f"soc:arc_finance_cache:{limit}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(ARC_FEED_URL, params={"limit": 100}, timeout=12)
+        resp.raise_for_status()
+        articles = resp.json()
+        if not isinstance(articles, list):
+            return []
+        filtered = [
+            a for a in articles
+            if (a.get("category") or "").strip().lower() == "economic_finance"
+            and (a.get("source_lang") or "en").lower() in ("en", "english")
+            and len(a.get("original_text") or "") > 300
+        ][:limit]
+        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
+        return filtered
+    except Exception as exc:
+        app.logger.warning(f"[arc_finance] fetch failed: {exc}")
+        return []
+
+
 def _fetch_huntaegis_articles(limit: int = 24) -> list[dict]:
     """Fetch articles from Huntaegis's public feed. Same HTTP boundary
     SoC uses for arc-codex; Huntaegis is the threat-intel sibling stack.
@@ -920,7 +949,12 @@ def _resolve_dynamic_article(article_id: str) -> dict | None:
     for a in _fetch_huntaegis_articles():
         if _article_id(a) == article_id:
             return a
-    # 4) Direct per-id fetches — covers older articles
+    # 4) Arc-codex finance-filtered cache (helps cyber/finance courses hit
+    #    cached entries before paying for a direct per-id fetch).
+    for a in _fetch_arc_finance_articles():
+        if _article_id(a) == article_id:
+            return a
+    # 5) Direct per-id fetches — covers older articles
     return _fetch_arc_article_by_id(article_id) or _fetch_huntaegis_article_by_id(article_id)
 
 
@@ -973,6 +1007,29 @@ def _huntaegis_date_str(article: dict) -> str:
         return time.strftime("%Y-%m-%d", time.gmtime(secs))
     except Exception:
         return ""
+
+
+@app.route("/api/dynamic/finance")
+def list_dynamic_finance():
+    """Return summaries from arc-codex's feed filtered to the
+    economic_finance category, for the financial-daily course's
+    article picker. Same shape as /api/dynamic/articles."""
+    articles = _fetch_arc_finance_articles(limit=24)
+    if not articles:
+        return jsonify({"error": "Could not reach Arc Codex finance feed"}), 503
+    summaries = []
+    for a in articles:
+        text = (a.get("original_text") or "").strip()
+        summaries.append({
+            "id":           _article_id(a),
+            "title":        (a.get("title") or "Untitled").strip(),
+            "source":       (a.get("source_name") or a.get("source") or "").strip(),
+            "category":     (a.get("category") or "").strip(),
+            "published_at": _huntaegis_date_str(a),
+            "preview":      text[:220] + "…" if len(text) > 220 else text,
+            "word_count":   len(text.split()),
+        })
+    return jsonify(summaries)
 
 
 @app.route("/api/dynamic/huntaegis")

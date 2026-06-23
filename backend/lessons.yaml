@@ -5899,3 +5899,31 @@ courses:
       url: "https://huntaegis.com"
       tagline: "Threat intelligence — A.R.C. analysis"
     lessons: []
+
+  # ============================================================
+  # COURSE 21 — Financial Daily (dynamic, arc-codex finance, comprehension)
+  # ============================================================
+  # Self-study reading log for staying current with the financial news cycle.
+  # Same engine as cyber-security-daily and plant-badge: single pass at 70%+
+  # on an article mints a per-article comprehension badge with the user's
+  # Google name on it. Sourced from arc-codex's economic_finance category
+  # via the public feed (no sponsor — it's arc's own content).
+  # NOT a credential, NOT verification of professional financial competence
+  # or regulatory qualification — copy on the course page and category card
+  # calls that out explicitly.
+  - slug: financial-daily
+    title: "Financial Daily"
+    tagline: "Five questions on today's financial news. Read, comprehend, mark it done."
+    description: >
+      Each day, pick a financial-news article and answer five open-response
+      questions on it. The grader has the article — general knowledge alone
+      won't be enough. Earn a comprehension badge for every article you pass.
+      A reading log for staying current with the financial news cycle — not
+      a credential, professional qualification, or regulatory competence
+      assessment.
+    icon: "💹"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    article_source: arc-finance
+    lessons: []

@@ -124,6 +124,19 @@ export const CATEGORIES: Category[] = [
         courseSlugs: ["cyber-security-daily"],
     },
     {
+        slug: "financial-daily",
+        label: "Financial Daily",
+        icon: "💹",
+        tagline: "Stay current with today's financial news",
+        description:
+            "Pick today's financial-news article from the Arc Codex feed and answer five typed " +
+            "questions on it. The grader has the article — general knowledge won't be enough. " +
+            "Comprehension badges with your name on them, one per article. A reading log for " +
+            "staying current with the financial news cycle — not a credential, professional " +
+            "qualification, or regulatory competence assessment.",
+        courseSlugs: ["financial-daily"],
+    },
+    {
         slug: "get-certified",
         label: "Get Certified",
         icon: "🌱",
