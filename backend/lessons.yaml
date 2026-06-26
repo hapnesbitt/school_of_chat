@@ -5800,6 +5800,17 @@ courses:
     tier: 1
     difficulty: beginner
     lesson_type: dynamic
+    dynamic:
+      source: arc
+      selector:
+        type: none
+      fetch_window: 24
+      cache_version: 1
+      header_label: "Live articles"
+      how_it_works: >
+        Select any article below to read it. Once you're done, Ollama generates 5
+        comprehension questions from the article's content. Answer them, get
+        graded, and pass 3 at 70%+ to earn your certificate.
     lessons: []
 
   # ============================================================
@@ -5821,6 +5832,17 @@ courses:
     tier: 1
     difficulty: beginner
     lesson_type: dynamic
+    dynamic:
+      source: arc
+      selector:
+        type: none
+      fetch_window: 24
+      result_limit: 7
+      cache_version: 1
+      header_label: "This week"
+      how_it_works: >
+        Pick a story from this week, get five questions about it, answer in your
+        own words. The grader has the article — general knowledge won't be enough.
     lessons: []
 
   # ============================================================
@@ -5869,6 +5891,18 @@ courses:
     tier: 1
     difficulty: beginner
     lesson_type: dynamic
+    dynamic:
+      source: arc
+      selector:
+        type: none
+      fetch_window: 24
+      cache_version: 1
+      header_label: "Live articles"
+      cta_label: "Quiz Me →"
+      how_it_works: >
+        Select any article below to read it, answer five questions in your own
+        words, and earn a badge when you pass at 70%+. The grader has the article
+        — general knowledge won't be enough.
     lessons: []
 
   # ============================================================
@@ -5894,6 +5928,19 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: huntaegis
+    dynamic:
+      source: huntaegis
+      selector:
+        type: none
+      fetch_window: 24
+      cache_version: 1
+      header_label: "Today's threat-intel"
+      how_it_works: >
+        Pick a threat-intel article from today's Huntaegis feed and read it.
+        Answer five open-response questions on what it actually said. Pass at
+        70%+ to log a comprehension badge with your name on it. The grader has
+        the article — general knowledge alone won't be enough. This is self-study
+        to help you stay current — not verification of pen-test competence.
     sponsor:
       name: "Huntaegis"
       url: "https://huntaegis.com"
@@ -5926,6 +5973,21 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: arc-finance
+    dynamic:
+      source: arc
+      selector:
+        type: category
+        category: economic_finance
+      fetch_window: 100
+      cache_version: 1
+      header_label: "Today's financial news"
+      how_it_works: >
+        Pick a financial-news article from today's Arc Codex feed and read it.
+        Answer five open-response questions on what it actually said. Pass at
+        70%+ to log a comprehension badge with your name on it. The grader has
+        the article — general knowledge alone won't be enough. This is self-study
+        to help you stay current with the financial news cycle — not a credential,
+        professional qualification, or regulatory competence assessment.
     lessons: []
 
   # ============================================================
@@ -5961,6 +6023,23 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: arc-ai
+    dynamic:
+      source: arc
+      selector:
+        type: classifier
+        pattern: '(artificial intelligence|machine learning|\bLLM\b|\bLLMs\b|\bGPT|ChatGPT|OpenAI|Anthropic|\bClaude\b|Gemini|\bAGI\b|\balignment\b|superintellig|neural net|generative AI|chatbot|agentic|model inference|\bOllama\b|consciousness|sentien|philosophy of mind|epistem|frontier model|reward hacking|interpretability|large language model)'
+        title_anchor: true
+        body_min_distinct: 3
+      fetch_window: 100
+      cache_version: 1
+      header_label: "Today's readings"
+      how_it_works: >
+        Pick an article on AI, alignment, consciousness, or the philosophy of mind
+        from today's Arc Codex feed and read it. Answer five open-response questions
+        on what it actually said. Pass at 70%+ to log a comprehension badge with your
+        name on it. The grader has the article — general knowledge alone won't be
+        enough. This is self-study to help you think clearly about AI and the
+        questions around it — not a credential or a competence assessment.
     lessons: []
 
   # ============================================================
@@ -6002,4 +6081,22 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: arc-religion
+    dynamic:
+      source: arc
+      selector:
+        type: classifier
+        pattern: '(\breligio|\bfaith\b|\bchurch|\bcatholic|\bvatican|\bpapal|the pope|popes?\s+(?:francis|leo|benedict|john\s+paul|to|will|is|has|said|visit|urge|call|warns?|condemn|appoint|name|met|elect|pray)|\bchristian|evangelical|protestant|\bbaptist|methodist|presbyterian|\bislam|muslim|mosque|\bimam|\bquran|\bkoran|sharia|ramadan|\bjewish|\bjudaism|synagogue|\brabbi|\btorah|antisemit|\bhindu|\bbuddhis|\bsikh|clergy|\bpriest|\bbishop|archbishop|\bcardinal\b|\bpastor|\bsermon|congregation|interfaith|theolog|scripture|\bbiblical|religious freedom|religious liberty|freedom of religion|\bdiocese|\bparish|missionar|pilgrimage|\bhajj\b|holy site|\bdiwali|\bhanukkah|\bjihad|caliphate|religious right|christian nationalis|religious minorit|religious hostilit)'
+        title_anchor: true
+        body_min_distinct: 3
+      fetch_window: 500
+      cache_version: 1
+      header_label: "Today's readings"
+      how_it_works: >
+        Pick an article from today's Arc Codex feed and read it. Answer five
+        open-response questions on what it actually said. Pass at 70%+ to log a
+        comprehension badge with your name on it. The grader has the article —
+        general knowledge alone won't be enough. This is self-study to read
+        carefully about religion in public life — not a credential, and not a
+        position on any belief. The questions test what the piece reported,
+        never whether it's true or which tradition is right.
     lessons: []

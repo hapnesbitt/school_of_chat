@@ -71,6 +71,35 @@ with open(_YAML_PATH) as _f:
 COURSES: list[dict] = _DATA["courses"]
 COURSES_BY_SLUG: dict[str, dict] = {c["slug"]: c for c in COURSES}
 
+# Dynamic-course config registry — the `dynamic:` block per course (source,
+# selector, fetch_window, cache_version, frontend strings). Keyed by slug. A new
+# dynamic course is a YAML record here; no per-course code. `source_key` defaults
+# to article_source (or slug) and namespaces the course's Redis cache.
+DYNAMIC_COURSE_CFG: dict[str, dict] = {}
+for _c in COURSES:
+    _dyn = _c.get("dynamic")
+    if _dyn:
+        _cfg = dict(_dyn)
+        _cfg["slug"] = _c["slug"]
+        _cfg.setdefault("source_key", _c.get("article_source") or _c["slug"])
+        DYNAMIC_COURSE_CFG[_c["slug"]] = _cfg
+
+
+def _course_dynamic_frontend(course: dict) -> dict | None:
+    """Frontend-facing slice of a course's `dynamic:` block: the strings and
+    fetch path the course page renders. Defaults fetch_path to the generic
+    endpoint so a registry course needs no explicit path. Returns None for
+    non-dynamic courses."""
+    dyn = course.get("dynamic")
+    if not dyn:
+        return None
+    return {
+        "how_it_works": dyn.get("how_it_works", ""),
+        "header_label": dyn.get("header_label", "Live articles"),
+        "fetch_path":   dyn.get("fetch_path") or f"/api/dynamic/course/{course['slug']}",
+        "cta_label":    dyn.get("cta_label", "Read & Test →"),
+    }
+
 # Flat lesson index with course_slug injected
 LESSONS: list[dict] = []
 LESSONS_BY_SLUG: dict[str, dict] = {}
@@ -167,6 +196,7 @@ def get_course(course_slug: str):
         "icon":           course["icon"],
         "lesson_type":    course.get("lesson_type", ""),
         "article_source": course.get("article_source", ""),
+        "dynamic":        _course_dynamic_frontend(course),
         "sponsor":        course.get("sponsor") or None,
         "lessons": [
             {
@@ -449,17 +479,10 @@ def _course_article_id_set(course_slug: str) -> set[str]:
     For plant-badge that's the curated plant catalog; for news courses it's
     the current news fetch. Used to gate badge eligibility so a news pass
     cannot mint a plant badge (and vice versa)."""
-    source = _course_article_source(course_slug)
-    if source == "plants":
+    if _course_article_source(course_slug) == "plants":
         return {p["id"] for p in _fetch_plant_catalog()}
-    if source == "huntaegis":
-        return {_article_id(a) for a in _fetch_huntaegis_articles()}
-    if source == "arc-finance":
-        return {_article_id(a) for a in _fetch_arc_finance_articles()}
-    if source == "arc-ai":
-        return {_article_id(a) for a in _fetch_arc_ai_articles()}
-    if source == "arc-religion":
-        return {_article_id(a) for a in _fetch_arc_religion_articles()}
+    if course_slug in DYNAMIC_COURSE_CFG:
+        return {_article_id(a) for a in _fetch_arc_dynamic(course_slug)}
     return {_article_id(a) for a in _fetch_arc_articles()}
 
 
@@ -862,208 +885,117 @@ def _fetch_arc_article_by_id(article_id: str) -> dict | None:
         return None
 
 
-def _fetch_arc_finance_articles(limit: int = 24) -> list[dict]:
-    """Fetch arc-codex articles filtered to the economic_finance category.
-    Arc-codex's feed doesn't accept a directive/category param, so we
-    pull a wider window and filter client-side. Redis-cached for 30 min."""
-    cache_key = f"soc:arc_finance_cache:{limit}"
-    cached = r.get(cache_key)
-    if cached:
-        return json.loads(cached)
-    try:
-        resp = http_requests.get(ARC_FEED_URL, params={"limit": 100}, timeout=12)
-        resp.raise_for_status()
-        articles = resp.json()
-        if not isinstance(articles, list):
-            return []
-        filtered = [
-            a for a in articles
-            if (a.get("category") or "").strip().lower() == "economic_finance"
-            and (a.get("source_lang") or "en").lower() in ("en", "english")
-            and len(a.get("original_text") or "") > 300
-        ][:limit]
-        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
-        return filtered
-    except Exception as exc:
-        app.logger.warning(f"[arc_finance] fetch failed: {exc}")
-        return []
-
-
 # ---------------------------------------------------------------------------
-# School for a New Machine — AI / alignment / consciousness / philosophy.
+# Dynamic-course registry — generic feed selection.
 #
-# Unlike finance (one clean `economic_finance` category), this topic does NOT
-# map to any single category or directive in arc-codex's taxonomy. On-topic
-# articles are SCATTERED across ~14 directives (the best alignment pieces are
-# tagged "Geopolitics" or "Crisis Event Monitoring"; Ross's own deep pieces are
-# tagged "Manual"), and the nominal "AI Developments and Discourse" directive
-# is only ~50% on-topic (it includes EV reviews, art shows, a fund named
-# "Align"). So we cannot reuse the finance one-line category filter.
+# A dynamic course is a CONFIG RECORD (the `dynamic:` block in lessons.yaml),
+# read into DYNAMIC_COURSE_CFG at import. ONE generic fetcher reads that record
+# instead of a hand-written _fetch_arc_<topic> per course. Selector types cover
+# everything built so far:
+#   - none       : the raw feed (reading-comprehension, pop-quiz, quiz-me)
+#   - category   : one arc-codex `category` value (finance's economic_finance)
+#   - classifier : a precision-first keyword regex (AI, religion) over a wide
+#                  window — title-anchored OR N distinct on-topic body terms
+# `source` selects the upstream feed (arc | huntaegis); plants is a separate
+# catalog path and stays an escape hatch.
 #
-# Instead we run a precision-first keyword classifier over a wide feed window:
-# an article qualifies if its TITLE matches a strong AI/alignment/philosophy
-# term, OR its lead text carries TWO distinct on-topic terms. Title-anchoring
-# keeps precision ~90% while still recovering on-topic articles the directive
-# filter would miss. Same fetch+filter HTTP boundary as finance — no taxonomy
-# changes, no hand-curated id list.
-_AI_TERMS = re.compile(
-    r"(artificial intelligence|machine learning|\bLLM\b|\bLLMs\b|\bGPT|ChatGPT|"
-    r"OpenAI|Anthropic|\bClaude\b|Gemini|\bAGI\b|\balignment\b|superintellig|"
-    r"neural net|generative AI|chatbot|agentic|model inference|\bOllama\b|"
-    r"consciousness|sentien|philosophy of mind|epistem|frontier model|"
-    r"reward hacking|interpretability|large language model)",
-    re.I,
-)
-
-
-def _is_ai_article(a: dict) -> bool:
-    """Precision-first predicate for the School for a New Machine course.
-    True if the title carries a strong on-topic term, or the lead text
-    carries at least THREE distinct on-topic terms. The title anchor gives
-    high precision; the 3-distinct-term body rule recovers genuinely on-topic
-    pieces with a vague title (an article actually about AI mentions many
-    distinct terms) while rejecting off-topic pieces that name-drop 'AI' once
-    or twice in passing."""
-    title = a.get("title") or ""
-    if _AI_TERMS.search(title):
-        return True
-    lead = (a.get("original_text") or "")[:1500]
-    hits = {m.group(0).lower() for m in _AI_TERMS.finditer(lead)}
-    return len(hits) >= 3
-
-
-def _fetch_arc_ai_articles(limit: int = 24) -> list[dict]:
-    """Fetch arc-codex articles classified as AI / alignment / consciousness /
-    philosophy. Arc-codex's taxonomy can't select this topic cleanly, so we
-    pull a wide window and apply a precision-first keyword classifier
-    (_is_ai_article) client-side. Redis-cached for 30 min."""
-    cache_key = f"soc:arc_ai_cache:{limit}"
-    cached = r.get(cache_key)
-    if cached:
-        return json.loads(cached)
-    try:
-        resp = http_requests.get(ARC_FEED_URL, params={"limit": 100}, timeout=12)
-        resp.raise_for_status()
-        articles = resp.json()
-        if not isinstance(articles, list):
-            return []
-        filtered = [
-            a for a in articles
-            if _is_ai_article(a)
-            and (a.get("source_lang") or "en").lower() in ("en", "english")
-            and len(a.get("original_text") or "") > 300
-        ][:limit]
-        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
-        return filtered
-    except Exception as exc:
-        app.logger.warning(f"[arc_ai] fetch failed: {exc}")
-        return []
-
-
+# Caching: the per-course result is keyed on the selector's `cache_version`, so
+# tuning a classifier regex (bump the version) self-busts stale 30-min entries.
 # ---------------------------------------------------------------------------
-# Religion Daily — religion in public life (faith communities, religious
-# policy/law, interfaith & culture, religious figures and institutions in
-# the news).
-#
-# Like the AI course (and UNLIKE finance's clean `economic_finance`), religion
-# does NOT map to any arc-codex category or directive — a live 467-article
-# window had zero "religion" tag and on-topic pieces were scattered across
-# Geopolitics, Education Policy, Immigration, Crisis Monitoring, etc. So we
-# reuse the keyword-classifier-over-wide-window pattern, not a category filter.
-#
-# Religion is also RARE: ~2.6% of the corpus (vs finance's ~19%). At the 100-
-# article window finance/AI use, a daily picker would surface only ~2 articles,
-# so _fetch_arc_religion_articles pulls the feed's max (500) before filtering
-# to keep the picker usefully stocked (~10-14 on-topic articles).
-#
-# Scope is religion-IN-PUBLIC-LIFE, not devotion/exegesis: title-anchored or a
-# 3-distinct-term body signal, precision-first (an off-topic quiz undercuts a
-# comprehension course). `pope` is constrained to the pontiff (the pope / pope
-# <name|verb> / papal) so a surname like "Louis Pope Gratacap" isn't a hit.
-_RELIGION_TERMS = re.compile(
-    r"(\breligio|\bfaith\b|\bchurch|\bcatholic|\bvatican|\bpapal|"
-    r"the pope|popes?\s+(?:francis|leo|benedict|john\s+paul|to|will|is|has|said|"
-    r"visit|urge|call|warns?|condemn|appoint|name|met|elect|pray)|"
-    r"\bchristian|evangelical|protestant|\bbaptist|methodist|presbyterian|"
-    r"\bislam|muslim|mosque|\bimam|\bquran|\bkoran|sharia|ramadan|"
-    r"\bjewish|\bjudaism|synagogue|\brabbi|\btorah|antisemit|"
-    r"\bhindu|\bbuddhis|\bsikh|clergy|\bpriest|\bbishop|"
-    r"archbishop|\bcardinal\b|\bpastor|\bsermon|congregation|"
-    r"interfaith|theolog|scripture|\bbiblical|"
-    r"religious freedom|religious liberty|freedom of religion|"
-    r"\bdiocese|\bparish|missionar|pilgrimage|\bhajj\b|holy site|"
-    r"\bdiwali|\bhanukkah|\bjihad|caliphate|"
-    r"religious right|christian nationalis|religious minorit|religious hostilit)",
-    re.I,
-)
+
+_PATTERN_CACHE: dict[str, "re.Pattern"] = {}
 
 
-def _is_religion_article(a: dict) -> bool:
-    """Precision-first predicate for Religion Daily. True if the title carries a
-    strong religion-in-public-life term, or the lead text carries at least THREE
-    distinct on-topic terms. The title anchor gives high precision; the 3-distinct
-    body rule recovers genuinely on-topic pieces with a vague title while rejecting
-    pieces that name-drop a religious word once or twice in passing."""
-    title = a.get("title") or ""
-    if _RELIGION_TERMS.search(title):
+def _compiled(pattern: str) -> "re.Pattern":
+    """Compile-and-cache a classifier regex (case-insensitive)."""
+    p = _PATTERN_CACHE.get(pattern)
+    if p is None:
+        p = re.compile(pattern, re.I)
+        _PATTERN_CACHE[pattern] = p
+    return p
+
+
+def _passes_selector(a: dict, selector: dict) -> bool:
+    """True if article `a` matches a course's selector record."""
+    stype = (selector.get("type") or "none").lower()
+    if stype == "none":
         return True
-    lead = (a.get("original_text") or "")[:1500]
-    hits = {m.group(0).lower() for m in _RELIGION_TERMS.finditer(lead)}
-    return len(hits) >= 3
+    if stype == "category":
+        want = (selector.get("category") or "").strip().lower()
+        return (a.get("category") or "").strip().lower() == want
+    if stype == "classifier":
+        pat = _compiled(selector.get("pattern") or r"(?!)")
+        if selector.get("title_anchor", True) and pat.search(a.get("title") or ""):
+            return True
+        scan = selector.get("body_scan_chars", 1500)
+        lead = (a.get("original_text") or "")[:scan]
+        hits = {m.group(0).lower() for m in pat.finditer(lead)}
+        return len(hits) >= selector.get("body_min_distinct", 3)
+    return False
 
 
-def _fetch_arc_religion_articles(limit: int = 24) -> list[dict]:
-    """Fetch arc-codex articles about religion in public life. Arc-codex's
-    taxonomy has no religion category, and the topic is rare (~2.6% of the
-    corpus), so we pull the feed's MAX window (500) and apply a precision-first
-    keyword classifier (_is_religion_article) client-side. Redis-cached 30 min."""
-    cache_key = f"soc:arc_religion_cache:{limit}"
+def _raw_feed(source: str, window: int) -> list[dict]:
+    """Fetch a raw upstream feed window, English + readable only. Cached 30 min
+    per (source, window) so selectors over the same feed share one HTTP pull."""
+    url = HUNTAEGIS_FEED_URL if source == "huntaegis" else ARC_FEED_URL
+    cache_key = f"soc:raw_feed:{source}:{window}"
     cached = r.get(cache_key)
     if cached:
         return json.loads(cached)
     try:
-        resp = http_requests.get(ARC_FEED_URL, params={"limit": 500}, timeout=15)
+        resp = http_requests.get(url, params={"limit": window}, timeout=15)
         resp.raise_for_status()
         articles = resp.json()
         if not isinstance(articles, list):
             return []
-        filtered = [
-            a for a in articles
-            if _is_religion_article(a)
-            and (a.get("source_lang") or "en").lower() in ("en", "english")
-            and len(a.get("original_text") or "") > 300
-        ][:limit]
-        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
-        return filtered
-    except Exception as exc:
-        app.logger.warning(f"[arc_religion] fetch failed: {exc}")
-        return []
-
-
-def _fetch_huntaegis_articles(limit: int = 24) -> list[dict]:
-    """Fetch articles from Huntaegis's public feed. Same HTTP boundary
-    SoC uses for arc-codex; Huntaegis is the threat-intel sibling stack.
-    Redis-cached for 30 min."""
-    cache_key = f"soc:huntaegis_feed_cache:{limit}"
-    cached = r.get(cache_key)
-    if cached:
-        return json.loads(cached)
-    try:
-        resp = http_requests.get(HUNTAEGIS_FEED_URL, params={"limit": limit}, timeout=12)
-        resp.raise_for_status()
-        articles = resp.json()
-        if not isinstance(articles, list):
-            return []
-        filtered = [
+        articles = [
             a for a in articles
             if (a.get("source_lang") or "en").lower() in ("en", "english")
             and len(a.get("original_text") or "") > 300
-        ][:limit]
-        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
-        return filtered
+        ]
+        r.set(cache_key, json.dumps(articles), ex=ARC_CACHE_TTL)
+        return articles
     except Exception as exc:
-        app.logger.warning(f"[huntaegis_feed] fetch failed: {exc}")
+        app.logger.warning(f"[raw_feed:{source}] fetch failed: {exc}")
         return []
+
+
+def _fetch_arc_dynamic(course_slug: str, limit: int | None = None) -> list[dict]:
+    """Generic dynamic-course fetcher. Reads the course's `dynamic:` config
+    (source + selector + fetch_window + cache_version) and returns the filtered,
+    capped article list. Replaces the per-course _fetch_arc_<topic> functions.
+    Result cached 30 min, keyed on cache_version for self-busting on regex edits."""
+    cfg = DYNAMIC_COURSE_CFG.get(course_slug)
+    if not cfg:
+        return []
+    source   = cfg.get("source", "arc")
+    window   = int(cfg.get("fetch_window", 100))
+    selector = cfg.get("selector") or {"type": "none"}
+    result_n = int(limit if limit is not None else cfg.get("result_limit", 24))
+    cv       = cfg.get("cache_version", 1)
+    cache_key = f"soc:dyn_feed:{cfg['source_key']}:v{cv}:{result_n}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    raw = _raw_feed(source, window)
+    filtered = [a for a in raw if _passes_selector(a, selector)][:result_n]
+    r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
+    return filtered
+
+
+def _summarize_article(a: dict) -> dict:
+    """The article-summary shape every dynamic picker returns. `_huntaegis_date_str`
+    handles both ISO date strings (arc) and ms-epoch timestamps (huntaegis)."""
+    text = (a.get("original_text") or "").strip()
+    return {
+        "id":           _article_id(a),
+        "title":        (a.get("title") or "Untitled").strip(),
+        "source":       (a.get("source_name") or a.get("source") or "").strip(),
+        "category":     (a.get("category") or "").strip(),
+        "published_at": _huntaegis_date_str(a),
+        "preview":      text[:220] + "…" if len(text) > 220 else text,
+        "word_count":   len(text.split()),
+    }
 
 
 def _fetch_huntaegis_article_by_id(article_id: str) -> dict | None:
@@ -1090,35 +1022,35 @@ def _fetch_huntaegis_article_by_id(article_id: str) -> dict | None:
 
 def _resolve_dynamic_article(article_id: str) -> dict | None:
     """Single point for finding an article by id across all dynamic sources.
-    Tries the news feed, the plant catalog, the huntaegis feed, then direct
-    per-id fetches from arc-codex and huntaegis. The direct fallbacks let
-    Quiz Me work on any published article, not just the latest 24."""
-    # 1) Arc news feed (the existing path)
-    for a in _fetch_arc_articles():
-        if _article_id(a) == article_id:
-            return a
+    Scans every REGISTERED dynamic course feed (a loop over the registry, not a
+    hand-maintained per-course ladder — so a new course can't be silently
+    skipped), then the plant catalog, then direct per-id fetches from arc-codex
+    and huntaegis. The direct fallbacks are the AGED-OUT path: they let Quiz Me
+    and a resumed quiz work on any published article, not just the latest feed."""
+    # 1) Every registered dynamic feed (cached — cheap). Covers news, finance,
+    #    AI, religion, cyber, and any future course automatically.
+    for slug in DYNAMIC_COURSE_CFG:
+        for a in _fetch_arc_dynamic(slug):
+            if _article_id(a) == article_id:
+                return a
     # 2) Plant catalog — looked up by id, then text fetched
     if any(p["id"] == article_id for p in _fetch_plant_catalog()):
         return _fetch_plant_article(article_id)
-    # 3) Huntaegis feed cache
-    for a in _fetch_huntaegis_articles():
-        if _article_id(a) == article_id:
-            return a
-    # 4) Arc-codex finance-filtered cache (helps cyber/finance courses hit
-    #    cached entries before paying for a direct per-id fetch).
-    for a in _fetch_arc_finance_articles():
-        if _article_id(a) == article_id:
-            return a
-    # 4b) Arc-codex AI-classified cache (School for a New Machine).
-    for a in _fetch_arc_ai_articles():
-        if _article_id(a) == article_id:
-            return a
-    # 4c) Arc-codex religion-classified cache (Religion Daily).
-    for a in _fetch_arc_religion_articles():
-        if _article_id(a) == article_id:
-            return a
-    # 5) Direct per-id fetches — covers older articles
+    # 3) Direct per-id fetches — the aged-out path (article rolled off the feed)
     return _fetch_arc_article_by_id(article_id) or _fetch_huntaegis_article_by_id(article_id)
+
+
+@app.route("/api/dynamic/course/<course_slug>")
+def list_dynamic_course(course_slug: str):
+    """Generic dynamic-course article picker. Reads the course's registry config
+    and returns summaries via the shared shape. One route for every
+    category/classifier/news course — replaces the per-course endpoints."""
+    if course_slug not in DYNAMIC_COURSE_CFG:
+        return jsonify({"error": "Not a registry-driven dynamic course"}), 404
+    articles = _fetch_arc_dynamic(course_slug)
+    if not articles:
+        return jsonify({"error": "Could not reach the article feed"}), 503
+    return jsonify([_summarize_article(a) for a in articles])
 
 
 @app.route("/api/dynamic/plants")
@@ -1170,98 +1102,6 @@ def _huntaegis_date_str(article: dict) -> str:
         return time.strftime("%Y-%m-%d", time.gmtime(secs))
     except Exception:
         return ""
-
-
-@app.route("/api/dynamic/finance")
-def list_dynamic_finance():
-    """Return summaries from arc-codex's feed filtered to the
-    economic_finance category, for the financial-daily course's
-    article picker. Same shape as /api/dynamic/articles."""
-    articles = _fetch_arc_finance_articles(limit=24)
-    if not articles:
-        return jsonify({"error": "Could not reach Arc Codex finance feed"}), 503
-    summaries = []
-    for a in articles:
-        text = (a.get("original_text") or "").strip()
-        summaries.append({
-            "id":           _article_id(a),
-            "title":        (a.get("title") or "Untitled").strip(),
-            "source":       (a.get("source_name") or a.get("source") or "").strip(),
-            "category":     (a.get("category") or "").strip(),
-            "published_at": _huntaegis_date_str(a),
-            "preview":      text[:220] + "…" if len(text) > 220 else text,
-            "word_count":   len(text.split()),
-        })
-    return jsonify(summaries)
-
-
-@app.route("/api/dynamic/ai")
-def list_dynamic_ai():
-    """Return summaries from arc-codex's feed classified as AI / alignment /
-    consciousness / philosophy, for the School for a New Machine course's
-    article picker. Same shape as /api/dynamic/articles."""
-    articles = _fetch_arc_ai_articles(limit=24)
-    if not articles:
-        return jsonify({"error": "Could not reach Arc Codex AI feed"}), 503
-    summaries = []
-    for a in articles:
-        text = (a.get("original_text") or "").strip()
-        summaries.append({
-            "id":           _article_id(a),
-            "title":        (a.get("title") or "Untitled").strip(),
-            "source":       (a.get("source_name") or a.get("source") or "").strip(),
-            "category":     (a.get("category") or "").strip(),
-            "published_at": _huntaegis_date_str(a),
-            "preview":      text[:220] + "…" if len(text) > 220 else text,
-            "word_count":   len(text.split()),
-        })
-    return jsonify(summaries)
-
-
-@app.route("/api/dynamic/religion")
-def list_dynamic_religion():
-    """Return summaries from arc-codex's feed classified as religion in public
-    life (faith, policy, culture, community), for the Religion Daily course's
-    article picker. Same shape as /api/dynamic/articles."""
-    articles = _fetch_arc_religion_articles(limit=24)
-    if not articles:
-        return jsonify({"error": "Could not reach Arc Codex religion feed"}), 503
-    summaries = []
-    for a in articles:
-        text = (a.get("original_text") or "").strip()
-        summaries.append({
-            "id":           _article_id(a),
-            "title":        (a.get("title") or "Untitled").strip(),
-            "source":       (a.get("source_name") or a.get("source") or "").strip(),
-            "category":     (a.get("category") or "").strip(),
-            "published_at": _huntaegis_date_str(a),
-            "preview":      text[:220] + "…" if len(text) > 220 else text,
-            "word_count":   len(text.split()),
-        })
-    return jsonify(summaries)
-
-
-@app.route("/api/dynamic/huntaegis")
-def list_dynamic_huntaegis():
-    """Return summaries from Huntaegis's threat-intel feed for the
-    cyber-security-daily course's article picker. Same shape as
-    /api/dynamic/articles."""
-    articles = _fetch_huntaegis_articles(limit=24)
-    if not articles:
-        return jsonify({"error": "Could not reach Huntaegis feed"}), 503
-    summaries = []
-    for a in articles:
-        text = (a.get("original_text") or "").strip()
-        summaries.append({
-            "id":           _article_id(a),
-            "title":        (a.get("title") or "Untitled").strip(),
-            "source":       (a.get("source_name") or a.get("source") or "").strip(),
-            "category":     (a.get("category") or "").strip(),
-            "published_at": _huntaegis_date_str(a),
-            "preview":      text[:220] + "…" if len(text) > 220 else text,
-            "word_count":   len(text.split()),
-        })
-    return jsonify(summaries)
 
 
 @app.route("/api/dynamic/articles")

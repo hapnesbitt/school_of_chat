@@ -20,6 +20,13 @@ interface Sponsor {
     reward_fine_print?: string;
 }
 
+interface DynamicConfig {
+    how_it_works: string;
+    header_label: string;
+    fetch_path: string;
+    cta_label: string;
+}
+
 interface Course {
     slug: string;
     title: string;
@@ -28,6 +35,7 @@ interface Course {
     icon: string;
     lesson_type: string;
     article_source?: string;
+    dynamic?: DynamicConfig | null;
     sponsor?: Sponsor | null;
     lessons: LessonSummary[];
 }
@@ -56,9 +64,11 @@ async function getCourse(slug: string): Promise<Course | null> {
     }
 }
 
-async function getArticles(limit?: number): Promise<ArticleSummary[]> {
-    const base = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/articles`;
-    const url  = limit ? `${base}?limit=${limit}` : base;
+// One config-driven fetcher: every dynamic course's article list comes from the
+// `fetch_path` in its registry record (served by /api/course). Replaces the
+// per-course getFinance/getAI/getReligion/getHuntaegis/getArticles clones.
+async function getDynamic(path: string): Promise<ArticleSummary[]> {
+    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}${path}`;
     try {
         const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) return [];
@@ -68,59 +78,10 @@ async function getArticles(limit?: number): Promise<ArticleSummary[]> {
     }
 }
 
+// Plant-badge is the one genuinely divergent dynamic course (catalog source,
+// coupon, common/latin rendering, per-plant badge) — it keeps its own fetch.
 async function getPlants(): Promise<ArticleSummary[]> {
-    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/plants`;
-    try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) return [];
-        return res.json();
-    } catch {
-        return [];
-    }
-}
-
-async function getHuntaegis(): Promise<ArticleSummary[]> {
-    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/huntaegis`;
-    try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) return [];
-        return res.json();
-    } catch {
-        return [];
-    }
-}
-
-async function getFinance(): Promise<ArticleSummary[]> {
-    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/finance`;
-    try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) return [];
-        return res.json();
-    } catch {
-        return [];
-    }
-}
-
-async function getAI(): Promise<ArticleSummary[]> {
-    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/ai`;
-    try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) return [];
-        return res.json();
-    } catch {
-        return [];
-    }
-}
-
-async function getReligion(): Promise<ArticleSummary[]> {
-    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/religion`;
-    try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) return [];
-        return res.json();
-    } catch {
-        return [];
-    }
+    return getDynamic("/api/dynamic/plants");
 }
 
 const DIFF_STYLE: Record<string, string> = {
@@ -169,125 +130,43 @@ function SponsorPill({ sponsor }: { sponsor: Sponsor }) {
     );
 }
 
-async function DynamicCourseContent({ course }: { course: Course }) {
-    const isPopQuiz          = course.slug === "pop-quiz";
-    const isPlantBadge       = course.slug === "plant-badge";
-    const isCyberDaily       = course.slug === "cyber-security-daily";
-    const isFinancialDaily   = course.slug === "financial-daily";
-    const isNewMachine       = course.slug === "new-machine";
-    const isReligionDaily    = course.slug === "religion-daily";
+// Shared "How this works" callout — copy comes from the course's registry record.
+function HowThisWorks({ text }: { text: string }) {
+    return (
+        <div className="rounded-xl border border-rock-yellow/20 bg-rock-yellow/5 px-5 py-4 mb-8">
+            <p className="text-xs text-rock-yellow font-black uppercase tracking-widest mb-1">How this works</p>
+            <p className="text-sm text-slate-400 leading-relaxed">{text}</p>
+        </div>
+    );
+}
 
-    const articles = isPlantBadge
-        ? await getPlants()
-        : isCyberDaily
-            ? await getHuntaegis()
-            : isFinancialDaily
-                ? await getFinance()
-                : isNewMachine
-                    ? await getAI()
-                    : isReligionDaily
-                        ? await getReligion()
-                        : await getArticles(isPopQuiz ? 7 : undefined);
+function FeedLoadError() {
+    return (
+        <div className="rounded-xl border border-white/10 bg-rock-card p-8 text-center">
+            <p className="text-slate-500 text-sm">Could not load articles from Arc Codex. Check back soon.</p>
+        </div>
+    );
+}
 
-    if (!articles || articles.length === 0) {
-        return (
-            <div className="rounded-xl border border-white/10 bg-rock-card p-8 text-center">
-                <p className="text-slate-500 text-sm">Could not load articles from Arc Codex. Check back soon.</p>
-            </div>
-        );
-    }
+// Config-driven content for every dynamic course EXCEPT plant-badge. All the
+// per-course variation (how_it_works, header_label, fetch_path, cta_label) is
+// read off course.dynamic — the registry record — so a new course needs no code.
+async function GenericDynamicContent({ course }: { course: Course }) {
+    const cfg        = course.dynamic;
+    const fetchPath  = cfg?.fetch_path  ?? "/api/dynamic/articles";
+    const headerLbl  = cfg?.header_label ?? "Live articles";
+    const ctaLabel   = cfg?.cta_label   ?? "Read & Test →";
+    const howItWorks = cfg?.how_it_works ?? "Select any article below to read it. Once you're done, Ollama generates 5 comprehension questions from the article's content. Answer them, get graded, and pass 3 at 70%+ to earn your certificate.";
+
+    const articles = await getDynamic(fetchPath);
+    if (!articles || articles.length === 0) return <FeedLoadError />;
 
     return (
         <>
-            {/* Plant-badge: lead with the coupon, the in-store payoff a customer
-                came to earn. Other dynamic courses don't ship a sponsor reward
-                so the strip simply doesn't render for them. */}
-            {isPlantBadge && course.sponsor?.reward_fine_print && (
-                <div
-                    role="img"
-                    aria-label={`Coupon — ${course.sponsor.reward_fine_print}`}
-                    className="rounded-xl border-2 border-dashed border-rock-yellow bg-rock-yellow/10 px-5 py-4 mb-4 flex items-center gap-4"
-                >
-                    <span aria-hidden="true" className="text-3xl shrink-0">🎟️</span>
-                    <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-rock-yellow/80 mb-0.5">
-                            Earn this coupon
-                        </p>
-                        <p className="text-base font-black text-white tracking-tight leading-snug">
-                            {course.sponsor.reward_fine_print}
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            <div className="rounded-xl border border-rock-yellow/20 bg-rock-yellow/5 px-5 py-4 mb-8">
-                <p className="text-xs text-rock-yellow font-black uppercase tracking-widest mb-1">How this works</p>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                    {isPlantBadge ? (
-                        <>Pick a plant from the catalog and read its Arc Codex article. Answer five typed
-                        questions. The grader has the article — general knowledge won&apos;t be enough. Pass
-                        at 70%+ and you earn a Plant Merit Badge for that specific plant, with your name on it.</>
-                    ) : isPopQuiz ? (
-                        <>Pick a story from this week, get five questions about it, answer in your own
-                        words. The grader has the article — general knowledge won&apos;t be enough.</>
-                    ) : isCyberDaily ? (
-                        <>Pick a threat-intel article from today&apos;s Huntaegis feed and read it.
-                        Answer five open-response questions on what it actually said. Pass at 70%+
-                        to log a comprehension badge with your name on it. The grader has the article
-                        — general knowledge alone won&apos;t be enough. This is self-study to help
-                        you stay current — not verification of pen-test competence.</>
-                    ) : isFinancialDaily ? (
-                        <>Pick a financial-news article from today&apos;s Arc Codex feed and read it.
-                        Answer five open-response questions on what it actually said. Pass at 70%+
-                        to log a comprehension badge with your name on it. The grader has the article
-                        — general knowledge alone won&apos;t be enough. This is self-study to help
-                        you stay current with the financial news cycle — not a credential, professional
-                        qualification, or regulatory competence assessment.</>
-                    ) : isNewMachine ? (
-                        <>Pick an article on AI, alignment, consciousness, or the philosophy of mind
-                        from today&apos;s Arc Codex feed and read it. Answer five open-response questions
-                        on what it actually said. Pass at 70%+ to log a comprehension badge with your
-                        name on it. The grader has the article — general knowledge alone won&apos;t be
-                        enough. This is self-study to help you think clearly about AI and the questions
-                        around it — not a credential or a competence assessment.</>
-                    ) : isReligionDaily ? (
-                        <>Pick an article from today&apos;s Arc Codex feed and read it. Answer five
-                        open-response questions on what it actually said. Pass at 70%+ to log a
-                        comprehension badge with your name on it. The grader has the article —
-                        general knowledge alone won&apos;t be enough. This is self-study to read
-                        carefully about religion in public life — not a credential, and not a position
-                        on any belief. The questions test what the piece reported, never whether
-                        it&apos;s true or which tradition is right.</>
-                    ) : (
-                        <>Select any article below to read it. Once you&apos;re done, Ollama generates 5 comprehension
-                        questions from the article&apos;s content. Answer them, get graded, and pass 3 at 70%+ to earn
-                        your certificate.</>
-                    )}
-                </p>
-            </div>
-
-            {/* Plant-badge: show earned badges before the article list (the dopamine loop) */}
-            {isPlantBadge && (
-                <PlantBadgesClient
-                    backendUrl={process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5007"}
-                    courseSlug={course.slug}
-                />
-            )}
+            <HowThisWorks text={howItWorks} />
 
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">
-                {isPlantBadge
-                    ? `Plant catalog · ${articles.length} plants`
-                    : isPopQuiz
-                        ? `This week · ${articles.length} stories`
-                        : isCyberDaily
-                            ? `Today's threat-intel · ${articles.length} articles`
-                            : isFinancialDaily
-                                ? `Today's financial news · ${articles.length} articles`
-                                : isNewMachine
-                                    ? `Today's readings · ${articles.length} articles`
-                                    : isReligionDaily
-                                        ? `Today's readings · ${articles.length} articles`
-                                        : `Live articles · ${articles.length} available`}
+                {`${headerLbl} · ${articles.length} ${articles.length === 1 ? "article" : "articles"}`}
             </h2>
 
             <div className="space-y-3">
@@ -301,24 +180,13 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                     >
                         <div className="flex items-start justify-between gap-4 mb-2">
                             <p className="font-bold text-white group-hover:text-rock-yellow transition-colors leading-snug flex-1">
-                                {isPlantBadge && article.common ? (
-                                    <>
-                                        <span>{article.common}</span>
-                                        {article.latin && (
-                                            <span className="font-normal italic text-slate-500 ml-2">{article.latin}</span>
-                                        )}
-                                    </>
-                                ) : (
-                                    article.title
-                                )}
+                                {article.title}
                             </p>
-                            {!isPlantBadge && <CategoryBadge category={article.category} />}
+                            <CategoryBadge category={article.category} />
                         </div>
-                        {!isPlantBadge && (
-                            <p className="text-xs text-slate-500 leading-relaxed mb-3 line-clamp-2">
-                                {article.preview}
-                            </p>
-                        )}
+                        <p className="text-xs text-slate-500 leading-relaxed mb-3 line-clamp-2">
+                            {article.preview}
+                        </p>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 text-[11px] text-slate-600">
                                 {article.source && <span>{article.source}</span>}
@@ -336,7 +204,7 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                                 )}
                             </div>
                             <span aria-hidden="true" className="text-slate-600 group-hover:text-rock-yellow transition-colors text-xs font-bold shrink-0">
-                                {isPlantBadge ? "Earn Badge →" : "Read & Test →"}
+                                {ctaLabel}
                             </span>
                         </div>
                     </Link>
@@ -344,6 +212,88 @@ async function DynamicCourseContent({ course }: { course: Course }) {
             </div>
         </>
     );
+}
+
+// Plant-badge escape hatch — the one genuinely divergent dynamic course: catalog
+// source, coupon strip, earned-badge loop, common/latin rendering, per-plant CTA.
+async function PlantBadgeContent({ course }: { course: Course }) {
+    const articles = await getPlants();
+    if (!articles || articles.length === 0) return <FeedLoadError />;
+
+    return (
+        <>
+            {course.sponsor?.reward_fine_print && (
+                <div
+                    role="img"
+                    aria-label={`Coupon — ${course.sponsor.reward_fine_print}`}
+                    className="rounded-xl border-2 border-dashed border-rock-yellow bg-rock-yellow/10 px-5 py-4 mb-4 flex items-center gap-4"
+                >
+                    <span aria-hidden="true" className="text-3xl shrink-0">🎟️</span>
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-rock-yellow/80 mb-0.5">
+                            Earn this coupon
+                        </p>
+                        <p className="text-base font-black text-white tracking-tight leading-snug">
+                            {course.sponsor.reward_fine_print}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            <HowThisWorks text={course.dynamic?.how_it_works ?? "Pick a plant from the catalog and read its Arc Codex article. Answer five typed questions. Pass at 70%+ and you earn a Plant Merit Badge for that specific plant, with your name on it."} />
+
+            <PlantBadgesClient
+                backendUrl={process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5007"}
+                courseSlug={course.slug}
+            />
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-5">
+                {`Plant catalog · ${articles.length} plants`}
+            </h2>
+
+            <div className="space-y-3">
+                {articles.map((article) => (
+                    <Link
+                        key={article.id}
+                        href={`/course/${course.slug}/article/${article.id}`}
+                        className="group block rounded-xl border border-white/10 bg-rock-card
+                                   hover:border-rock-yellow/30 hover:bg-[#161616] transition-all p-5
+                                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rock-yellow"
+                    >
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                            <p className="font-bold text-white group-hover:text-rock-yellow transition-colors leading-snug flex-1">
+                                {article.common ? (
+                                    <>
+                                        <span>{article.common}</span>
+                                        {article.latin && (
+                                            <span className="font-normal italic text-slate-500 ml-2">{article.latin}</span>
+                                        )}
+                                    </>
+                                ) : (
+                                    article.title
+                                )}
+                            </p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 text-[11px] text-slate-600">
+                                {article.source && <span>{article.source}</span>}
+                            </div>
+                            <span aria-hidden="true" className="text-slate-600 group-hover:text-rock-yellow transition-colors text-xs font-bold shrink-0">
+                                Earn Badge →
+                            </span>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </>
+    );
+}
+
+async function DynamicCourseContent({ course }: { course: Course }) {
+    if (course.slug === "plant-badge") {
+        return <PlantBadgeContent course={course} />;
+    }
+    return <GenericDynamicContent course={course} />;
 }
 
 // ---------------------------------------------------------------------------
