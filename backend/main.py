@@ -458,6 +458,8 @@ def _course_article_id_set(course_slug: str) -> set[str]:
         return {_article_id(a) for a in _fetch_arc_finance_articles()}
     if source == "arc-ai":
         return {_article_id(a) for a in _fetch_arc_ai_articles()}
+    if source == "arc-religion":
+        return {_article_id(a) for a in _fetch_arc_religion_articles()}
     return {_article_id(a) for a in _fetch_arc_articles()}
 
 
@@ -958,6 +960,86 @@ def _fetch_arc_ai_articles(limit: int = 24) -> list[dict]:
         return []
 
 
+# ---------------------------------------------------------------------------
+# Religion Daily — religion in public life (faith communities, religious
+# policy/law, interfaith & culture, religious figures and institutions in
+# the news).
+#
+# Like the AI course (and UNLIKE finance's clean `economic_finance`), religion
+# does NOT map to any arc-codex category or directive — a live 467-article
+# window had zero "religion" tag and on-topic pieces were scattered across
+# Geopolitics, Education Policy, Immigration, Crisis Monitoring, etc. So we
+# reuse the keyword-classifier-over-wide-window pattern, not a category filter.
+#
+# Religion is also RARE: ~2.6% of the corpus (vs finance's ~19%). At the 100-
+# article window finance/AI use, a daily picker would surface only ~2 articles,
+# so _fetch_arc_religion_articles pulls the feed's max (500) before filtering
+# to keep the picker usefully stocked (~10-14 on-topic articles).
+#
+# Scope is religion-IN-PUBLIC-LIFE, not devotion/exegesis: title-anchored or a
+# 3-distinct-term body signal, precision-first (an off-topic quiz undercuts a
+# comprehension course). `pope` is constrained to the pontiff (the pope / pope
+# <name|verb> / papal) so a surname like "Louis Pope Gratacap" isn't a hit.
+_RELIGION_TERMS = re.compile(
+    r"(\breligio|\bfaith\b|\bchurch|\bcatholic|\bvatican|\bpapal|"
+    r"the pope|popes?\s+(?:francis|leo|benedict|john\s+paul|to|will|is|has|said|"
+    r"visit|urge|call|warns?|condemn|appoint|name|met|elect|pray)|"
+    r"\bchristian|evangelical|protestant|\bbaptist|methodist|presbyterian|"
+    r"\bislam|muslim|mosque|\bimam|\bquran|\bkoran|sharia|ramadan|"
+    r"\bjewish|\bjudaism|synagogue|\brabbi|\btorah|antisemit|"
+    r"\bhindu|\bbuddhis|\bsikh|clergy|\bpriest|\bbishop|"
+    r"archbishop|\bcardinal\b|\bpastor|\bsermon|congregation|"
+    r"interfaith|theolog|scripture|\bbiblical|"
+    r"religious freedom|religious liberty|freedom of religion|"
+    r"\bdiocese|\bparish|missionar|pilgrimage|\bhajj\b|holy site|"
+    r"\bdiwali|\bhanukkah|\bjihad|caliphate|"
+    r"religious right|christian nationalis|religious minorit|religious hostilit)",
+    re.I,
+)
+
+
+def _is_religion_article(a: dict) -> bool:
+    """Precision-first predicate for Religion Daily. True if the title carries a
+    strong religion-in-public-life term, or the lead text carries at least THREE
+    distinct on-topic terms. The title anchor gives high precision; the 3-distinct
+    body rule recovers genuinely on-topic pieces with a vague title while rejecting
+    pieces that name-drop a religious word once or twice in passing."""
+    title = a.get("title") or ""
+    if _RELIGION_TERMS.search(title):
+        return True
+    lead = (a.get("original_text") or "")[:1500]
+    hits = {m.group(0).lower() for m in _RELIGION_TERMS.finditer(lead)}
+    return len(hits) >= 3
+
+
+def _fetch_arc_religion_articles(limit: int = 24) -> list[dict]:
+    """Fetch arc-codex articles about religion in public life. Arc-codex's
+    taxonomy has no religion category, and the topic is rare (~2.6% of the
+    corpus), so we pull the feed's MAX window (500) and apply a precision-first
+    keyword classifier (_is_religion_article) client-side. Redis-cached 30 min."""
+    cache_key = f"soc:arc_religion_cache:{limit}"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+    try:
+        resp = http_requests.get(ARC_FEED_URL, params={"limit": 500}, timeout=15)
+        resp.raise_for_status()
+        articles = resp.json()
+        if not isinstance(articles, list):
+            return []
+        filtered = [
+            a for a in articles
+            if _is_religion_article(a)
+            and (a.get("source_lang") or "en").lower() in ("en", "english")
+            and len(a.get("original_text") or "") > 300
+        ][:limit]
+        r.set(cache_key, json.dumps(filtered), ex=ARC_CACHE_TTL)
+        return filtered
+    except Exception as exc:
+        app.logger.warning(f"[arc_religion] fetch failed: {exc}")
+        return []
+
+
 def _fetch_huntaegis_articles(limit: int = 24) -> list[dict]:
     """Fetch articles from Huntaegis's public feed. Same HTTP boundary
     SoC uses for arc-codex; Huntaegis is the threat-intel sibling stack.
@@ -1029,6 +1111,10 @@ def _resolve_dynamic_article(article_id: str) -> dict | None:
             return a
     # 4b) Arc-codex AI-classified cache (School for a New Machine).
     for a in _fetch_arc_ai_articles():
+        if _article_id(a) == article_id:
+            return a
+    # 4c) Arc-codex religion-classified cache (Religion Daily).
+    for a in _fetch_arc_religion_articles():
         if _article_id(a) == article_id:
             return a
     # 5) Direct per-id fetches — covers older articles
@@ -1117,6 +1203,29 @@ def list_dynamic_ai():
     articles = _fetch_arc_ai_articles(limit=24)
     if not articles:
         return jsonify({"error": "Could not reach Arc Codex AI feed"}), 503
+    summaries = []
+    for a in articles:
+        text = (a.get("original_text") or "").strip()
+        summaries.append({
+            "id":           _article_id(a),
+            "title":        (a.get("title") or "Untitled").strip(),
+            "source":       (a.get("source_name") or a.get("source") or "").strip(),
+            "category":     (a.get("category") or "").strip(),
+            "published_at": _huntaegis_date_str(a),
+            "preview":      text[:220] + "…" if len(text) > 220 else text,
+            "word_count":   len(text.split()),
+        })
+    return jsonify(summaries)
+
+
+@app.route("/api/dynamic/religion")
+def list_dynamic_religion():
+    """Return summaries from arc-codex's feed classified as religion in public
+    life (faith, policy, culture, community), for the Religion Daily course's
+    article picker. Same shape as /api/dynamic/articles."""
+    articles = _fetch_arc_religion_articles(limit=24)
+    if not articles:
+        return jsonify({"error": "Could not reach Arc Codex religion feed"}), 503
     summaries = []
     for a in articles:
         text = (a.get("original_text") or "").strip()

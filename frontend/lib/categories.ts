@@ -150,6 +150,20 @@ export const CATEGORIES: Category[] = [
         courseSlugs: ["new-machine"],
     },
     {
+        slug: "religion-daily",
+        label: "Religion Daily",
+        icon: "🕊️",
+        tagline: "Daily readings on religion in the news — faith, policy, culture, and community",
+        description:
+            "Pick an article on religion in public life from the Arc Codex feed and answer five " +
+            "typed questions on what it actually said. The grader has the article — general " +
+            "knowledge won't be enough. Comprehension badges with your name on them, one per " +
+            "article. The questions test what the piece reported, never whether it's true. " +
+            "Self-study to read carefully about religion in public life — not a credential, " +
+            "and not a position on any belief.",
+        courseSlugs: ["religion-daily"],
+    },
+    {
         slug: "get-certified",
         label: "Get Certified",
         icon: "🌱",

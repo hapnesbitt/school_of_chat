@@ -5962,3 +5962,44 @@ courses:
     lesson_type: dynamic
     article_source: arc-ai
     lessons: []
+
+  # ============================================================
+  # COURSE 23 — Religion Daily (dynamic, arc-codex religion, comprehension)
+  # ============================================================
+  # Self-study reading log on religion in public life — faith communities,
+  # religious policy/law, interfaith and culture, religious figures and
+  # institutions in the news. Same engine as financial-daily and new-machine:
+  # single pass at 70%+ on an article mints a per-article comprehension badge
+  # with the user's Google name on it.
+  #
+  # SELECTION NOTE: like new-machine (and unlike finance's clean
+  # economic_finance category), religion does NOT map to any arc-codex category
+  # or directive — on-topic pieces are scattered across Geopolitics, Education
+  # Policy, Immigration, Crisis Monitoring, etc. It is also RARE (~2.6% of the
+  # corpus vs finance's ~19%). So article_source 'arc-religion' is backed by a
+  # precision-first KEYWORD CLASSIFIER over the feed's MAX window
+  # (_fetch_arc_religion_articles / _is_religion_article in main.py), not a
+  # category filter.
+  #
+  # NEUTRALITY GUARDRAIL: questions and grading test comprehension of the SOURCE
+  # ARTICLE only — "what did this piece report/claim," never "is this true" or
+  # "which tradition is right." Same fabrication-proof mechanic as the other
+  # dynamic courses; the grader rewards accurate restatement of the source, not
+  # agreement with it. NOT a credential, not a position on any belief — copy on
+  # the course page and category card states this explicitly.
+  - slug: religion-daily
+    title: "Religion Daily"
+    tagline: "Daily readings on religion in the news — faith, policy, culture, and community."
+    description: >
+      Each day, pick an article on religion in public life and answer five
+      open-response questions on what it actually said. The grader has the
+      article — general knowledge alone won't be enough. Earn a comprehension
+      badge for every article you pass. Self-study to read carefully about
+      religion in public life — not a credential, and not a position on any
+      belief. Questions test what the piece reported, never whether it's true.
+    icon: "🕊️"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    article_source: arc-religion
+    lessons: []

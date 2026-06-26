@@ -112,6 +112,17 @@ async function getAI(): Promise<ArticleSummary[]> {
     }
 }
 
+async function getReligion(): Promise<ArticleSummary[]> {
+    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/dynamic/religion`;
+    try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return [];
+        return res.json();
+    } catch {
+        return [];
+    }
+}
+
 const DIFF_STYLE: Record<string, string> = {
     beginner:     "text-rock-green  border-rock-green/30  bg-rock-green/10",
     intermediate: "text-rock-yellow border-rock-yellow/30 bg-rock-yellow/10",
@@ -164,6 +175,7 @@ async function DynamicCourseContent({ course }: { course: Course }) {
     const isCyberDaily       = course.slug === "cyber-security-daily";
     const isFinancialDaily   = course.slug === "financial-daily";
     const isNewMachine       = course.slug === "new-machine";
+    const isReligionDaily    = course.slug === "religion-daily";
 
     const articles = isPlantBadge
         ? await getPlants()
@@ -173,7 +185,9 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                 ? await getFinance()
                 : isNewMachine
                     ? await getAI()
-                    : await getArticles(isPopQuiz ? 7 : undefined);
+                    : isReligionDaily
+                        ? await getReligion()
+                        : await getArticles(isPopQuiz ? 7 : undefined);
 
     if (!articles || articles.length === 0) {
         return (
@@ -236,6 +250,14 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                         name on it. The grader has the article — general knowledge alone won&apos;t be
                         enough. This is self-study to help you think clearly about AI and the questions
                         around it — not a credential or a competence assessment.</>
+                    ) : isReligionDaily ? (
+                        <>Pick an article from today&apos;s Arc Codex feed and read it. Answer five
+                        open-response questions on what it actually said. Pass at 70%+ to log a
+                        comprehension badge with your name on it. The grader has the article —
+                        general knowledge alone won&apos;t be enough. This is self-study to read
+                        carefully about religion in public life — not a credential, and not a position
+                        on any belief. The questions test what the piece reported, never whether
+                        it&apos;s true or which tradition is right.</>
                     ) : (
                         <>Select any article below to read it. Once you&apos;re done, Ollama generates 5 comprehension
                         questions from the article&apos;s content. Answer them, get graded, and pass 3 at 70%+ to earn
@@ -263,7 +285,9 @@ async function DynamicCourseContent({ course }: { course: Course }) {
                                 ? `Today's financial news · ${articles.length} articles`
                                 : isNewMachine
                                     ? `Today's readings · ${articles.length} articles`
-                                    : `Live articles · ${articles.length} available`}
+                                    : isReligionDaily
+                                        ? `Today's readings · ${articles.length} articles`
+                                        : `Live articles · ${articles.length} available`}
             </h2>
 
             <div className="space-y-3">
