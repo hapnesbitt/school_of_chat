@@ -183,6 +183,31 @@ def list_courses():
     ])
 
 
+@app.route("/api/categories")
+def list_categories():
+    """Homepage category tiles generated from the course registry. A course that
+    carries a `card:` block becomes its own single-course category; fields default
+    to the course's own title/tagline/description/icon so a daily course needs no
+    separate categories.ts edit. The hand-authored editorial (multi-course)
+    categories live in the frontend; these are merged in after them, by `order`."""
+    cats = []
+    for c in COURSES:
+        card = c.get("card")
+        if not card:
+            continue
+        cats.append({
+            "slug":        card.get("category_slug") or c["slug"],
+            "label":       card.get("label")       or c["title"],
+            "icon":        card.get("icon")        or c["icon"],
+            "tagline":     card.get("tagline")     or c["tagline"],
+            "description": (card.get("description") or c["description"]).strip(),
+            "courseSlugs": [c["slug"]],
+            "order":       card.get("order", 100),
+        })
+    cats.sort(key=lambda x: x["order"])
+    return jsonify(cats)
+
+
 @app.route("/api/course/<course_slug>")
 def get_course(course_slug: str):
     course = COURSES_BY_SLUG.get(course_slug)

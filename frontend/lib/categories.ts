@@ -9,9 +9,16 @@ export interface Category {
     /** If true, any course with lesson_type "dynamic" is also included. */
     includeDynamic?: boolean;
     comingSoon?: boolean;
+    order?: number;
 }
 
-export const CATEGORIES: Category[] = [
+// Hand-authored EDITORIAL categories — multi-course groupings and the Advanced
+// dynamic intro. The single-course "daily" dynamic tiles (Pop Quiz, Cyber/
+// Financial/Religion Daily, School for a New Machine, Get Certified) are NOT
+// here: they're generated from the backend course registry (each course's
+// `card:` block in lessons.yaml) and merged in by getCategories(). So adding a
+// new daily course needs no edit to this file.
+export const STATIC_CATEGORIES: Category[] = [
     {
         slug: "workplace",
         label: "Workplace Essentials",
@@ -100,83 +107,33 @@ export const CATEGORIES: Category[] = [
         // course out of this card so it lives in its own (lighter) category.
         courseSlugs: ["reading-comprehension"],
     },
-    {
-        slug: "pop-quiz",
-        label: "Pop Quiz",
-        icon: "📰",
-        tagline: "Test yourself on this week's news",
-        description:
-            "Five open-response questions on a real article from the past week. " +
-            "Type your answer; the grader has the article in front of it. General knowledge " +
-            "won't be enough. The light corner of the site — still grounded, still real.",
-        courseSlugs: ["pop-quiz"],
-    },
-    {
-        slug: "cyber-daily",
-        label: "Cyber Security Daily",
-        icon: "🛡️",
-        tagline: "Stay current with today's threat intelligence",
-        description:
-            "Pick today's threat-intel article from the Huntaegis feed and answer five typed " +
-            "questions on it. The grader has the article — general knowledge won't be enough. " +
-            "Comprehension badges with your name on them, one per article. Hosted by Huntaegis. " +
-            "A reading log for staying current — not a credential or competence assessment.",
-        courseSlugs: ["cyber-security-daily"],
-    },
-    {
-        slug: "financial-daily",
-        label: "Financial Daily",
-        icon: "💹",
-        tagline: "Stay current with today's financial news",
-        description:
-            "Pick today's financial-news article from the Arc Codex feed and answer five typed " +
-            "questions on it. The grader has the article — general knowledge won't be enough. " +
-            "Comprehension badges with your name on them, one per article. A reading log for " +
-            "staying current with the financial news cycle — not a credential, professional " +
-            "qualification, or regulatory competence assessment.",
-        courseSlugs: ["financial-daily"],
-    },
-    {
-        slug: "new-machine",
-        label: "School for a New Machine",
-        icon: "🧠",
-        tagline: "Daily readings on AI, alignment, and the philosophy of mind",
-        description:
-            "Pick an article on AI, alignment, consciousness, or the philosophy of mind from " +
-            "the Arc Codex feed and answer five typed questions on it. The grader has the article " +
-            "— general knowledge won't be enough. Comprehension badges with your name on them, " +
-            "one per article. Self-study to think clearly about AI and the questions around it " +
-            "— not a credential or competence assessment.",
-        courseSlugs: ["new-machine"],
-    },
-    {
-        slug: "religion-daily",
-        label: "Religion Daily",
-        icon: "🕊️",
-        tagline: "Daily readings on religion in the news — faith, policy, culture, and community",
-        description:
-            "Pick an article on religion in public life from the Arc Codex feed and answer five " +
-            "typed questions on what it actually said. The grader has the article — general " +
-            "knowledge won't be enough. Comprehension badges with your name on them, one per " +
-            "article. The questions test what the piece reported, never whether it's true. " +
-            "Self-study to read carefully about religion in public life — not a credential, " +
-            "and not a position on any belief.",
-        courseSlugs: ["religion-daily"],
-    },
-    {
-        slug: "get-certified",
-        label: "Get Certified",
-        icon: "🌱",
-        tagline: "Earn a merit badge for what you actually know",
-        description:
-            "Single-article merit badges, sponsor-branded. Pass a real plant article from " +
-            "Arc Codex's catalog and earn a Plant Merit Badge for that specific plant — with " +
-            "your name on it. Hosted by Plantorium. More badge tracks coming as other " +
-            "sponsors come on.",
-        courseSlugs: ["plant-badge"],
-    },
 ];
 
-export function getCategoryBySlug(slug: string): Category | undefined {
-    return CATEGORIES.find((c) => c.slug === slug);
+/** Static category slugs — used by generateStaticParams (build time, no backend). */
+export const STATIC_CATEGORY_SLUGS = STATIC_CATEGORIES.map((c) => c.slug);
+
+// Single-course dynamic tiles generated from the backend course registry
+// (/api/categories ← each course's `card:` block). Sorted by `order`.
+async function fetchGeneratedCategories(): Promise<Category[]> {
+    const url = `${process.env.BACKEND_INTERNAL_URL ?? "http://localhost:5007"}/api/categories`;
+    try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return [];
+        return res.json();
+    } catch {
+        return [];
+    }
+}
+
+/** Editorial categories first, then registry-generated single-course tiles. */
+export async function getCategories(): Promise<Category[]> {
+    const generated = await fetchGeneratedCategories();
+    return [...STATIC_CATEGORIES, ...generated];
+}
+
+export async function getCategoryBySlug(slug: string): Promise<Category | undefined> {
+    const stat = STATIC_CATEGORIES.find((c) => c.slug === slug);
+    if (stat) return stat;
+    const generated = await fetchGeneratedCategories();
+    return generated.find((c) => c.slug === slug);
 }

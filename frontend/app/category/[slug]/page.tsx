@@ -3,7 +3,7 @@ import Link from "next/link";
 import UserMenu from "@/components/UserMenu";
 import CourseCard from "@/components/CourseCard";
 import type { Course } from "@/components/CourseCard";
-import { getCategoryBySlug, CATEGORIES } from "@/lib/categories";
+import { getCategoryBySlug, STATIC_CATEGORY_SLUGS } from "@/lib/categories";
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -20,14 +20,15 @@ async function getCourses(): Promise<Course[]> {
     }
 }
 
-// Let Next.js pre-render known slugs at build time
+// Pre-render the static editorial slugs at build time (no backend needed).
+// Registry-generated category pages render on-demand (dynamicParams default).
 export function generateStaticParams() {
-    return CATEGORIES.map((c) => ({ slug: c.slug }));
+    return STATIC_CATEGORY_SLUGS.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
     const { slug } = await params;
-    const cat = getCategoryBySlug(slug);
+    const cat = await getCategoryBySlug(slug);
     if (!cat) return {};
     return {
         title: `${cat.label} — School of Chat`,
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function CategoryPage({ params }: Props) {
     const { slug } = await params;
-    const cat = getCategoryBySlug(slug);
+    const cat = await getCategoryBySlug(slug);
     if (!cat) notFound();
 
     const allCourses = await getCourses();

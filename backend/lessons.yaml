@@ -5832,6 +5832,13 @@ courses:
     tier: 1
     difficulty: beginner
     lesson_type: dynamic
+    card:
+      order: 110
+      tagline: "Test yourself on this week's news"
+      description: >
+        Five open-response questions on a real article from the past week. Type
+        your answer; the grader has the article in front of it. General knowledge
+        won't be enough. The light corner of the site — still grounded, still real.
     dynamic:
       source: arc
       selector:
@@ -5866,6 +5873,16 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: plants
+    card:
+      category_slug: get-certified
+      label: "Get Certified"
+      order: 160
+      tagline: "Earn a merit badge for what you actually know"
+      description: >
+        Single-article merit badges, sponsor-branded. Pass a real plant article
+        from Arc Codex's catalog and earn a Plant Merit Badge for that specific
+        plant — with your name on it. Hosted by Plantorium. More badge tracks
+        coming as other sponsors come on.
     sponsor:
       name: "Plantorium"
       url: "https://plantorium.arc-codex.com"
@@ -5928,6 +5945,16 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: huntaegis
+    card:
+      category_slug: cyber-daily
+      order: 120
+      tagline: "Stay current with today's threat intelligence"
+      description: >
+        Pick today's threat-intel article from the Huntaegis feed and answer five
+        typed questions on it. The grader has the article — general knowledge won't
+        be enough. Comprehension badges with your name on them, one per article.
+        Hosted by Huntaegis. A reading log for staying current — not a credential
+        or competence assessment.
     dynamic:
       source: huntaegis
       selector:
@@ -5973,6 +6000,15 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: arc-finance
+    card:
+      order: 130
+      tagline: "Stay current with today's financial news"
+      description: >
+        Pick today's financial-news article from the Arc Codex feed and answer five
+        typed questions on it. The grader has the article — general knowledge won't
+        be enough. Comprehension badges with your name on them, one per article. A
+        reading log for staying current with the financial news cycle — not a
+        credential, professional qualification, or regulatory competence assessment.
     dynamic:
       source: arc
       selector:
@@ -6023,6 +6059,15 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: arc-ai
+    card:
+      order: 140
+      tagline: "Daily readings on AI, alignment, and the philosophy of mind"
+      description: >
+        Pick an article on AI, alignment, consciousness, or the philosophy of mind
+        from the Arc Codex feed and answer five typed questions on it. The grader
+        has the article — general knowledge won't be enough. Comprehension badges
+        with your name on them, one per article. Self-study to think clearly about
+        AI and the questions around it — not a credential or competence assessment.
     dynamic:
       source: arc
       selector:
@@ -6081,6 +6126,16 @@ courses:
     difficulty: beginner
     lesson_type: dynamic
     article_source: arc-religion
+    card:
+      order: 150
+      tagline: "Daily readings on religion in the news — faith, policy, culture, and community"
+      description: >
+        Pick an article on religion in public life from the Arc Codex feed and
+        answer five typed questions on it. The grader has the article — general
+        knowledge won't be enough. Comprehension badges with your name on them, one
+        per article. The questions test what the piece reported, never whether it's
+        true. Self-study to read carefully about religion in public life — not a
+        credential, and not a position on any belief.
     dynamic:
       source: arc
       selector:

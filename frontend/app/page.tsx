@@ -1,6 +1,6 @@
 import Link from "next/link";
 import UserMenu from "@/components/UserMenu";
-import { CATEGORIES } from "@/lib/categories";
+import { getCategories } from "@/lib/categories";
 import type { Course } from "@/components/CourseCard";
 
 async function getCourses(): Promise<Course[]> {
@@ -15,11 +15,11 @@ async function getCourses(): Promise<Course[]> {
 }
 
 export default async function HomePage() {
-    const courses = await getCourses();
+    const [courses, categories] = await Promise.all([getCourses(), getCategories()]);
     const bySlug = Object.fromEntries(courses.map((c) => [c.slug, c]));
 
     // Compute a live course count for each category
-    const categoriesWithCounts = CATEGORIES.map((cat) => {
+    const categoriesWithCounts = categories.map((cat) => {
         const staticCount = cat.courseSlugs.filter((s) => bySlug[s]).length;
         const dynamicCount = cat.includeDynamic
             ? courses.filter((c) => c.lesson_type === "dynamic").length
