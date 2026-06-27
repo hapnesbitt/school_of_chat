@@ -220,7 +220,7 @@ export default function ArticleTestClient({ article, backendUrl, courseSlug }: {
         setError(null);
         setPhase("generating");
         try {
-            const res = await fetch(`${backendUrl}/api/dynamic/questions/${article.id}`, { method: "POST" });
+            const res = await fetch(`${backendUrl}/api/dynamic/questions/${article.id}?course=${encodeURIComponent(courseSlug)}`, { method: "POST" });
             if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? `HTTP ${res.status}`);
             const data = await res.json();
             setQuestions(data.questions);
@@ -239,7 +239,7 @@ export default function ArticleTestClient({ article, backendUrl, courseSlug }: {
             const res = await fetch(`${backendUrl}/api/dynamic/submit`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ article_id: article.id, questions, answers: answers.map(a => a.trim()), user_id: userId }),
+                body: JSON.stringify({ article_id: article.id, questions, answers: answers.map(a => a.trim()), user_id: userId, course_slug: courseSlug }),
             });
             if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? `HTTP ${res.status}`);
             const { job_id } = await res.json();

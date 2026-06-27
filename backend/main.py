@@ -507,7 +507,10 @@ def _course_article_id_set(course_slug: str) -> set[str]:
     if _course_article_source(course_slug) == "plants":
         return {p["id"] for p in _fetch_plant_catalog()}
     if course_slug in DYNAMIC_COURSE_CFG:
-        return {_article_id(a) for a in _fetch_arc_dynamic(course_slug)}
+        # Vocab passes are stored under a `vocab:` field prefix; gate badges on
+        # the same prefixed ids so a vocab badge requires a vocab pass.
+        prefix = "vocab:" if _course_quiz_mode(course_slug) == "vocab" else ""
+        return {f"{prefix}{_article_id(a)}" for a in _fetch_arc_dynamic(course_slug)}
     return {_article_id(a) for a in _fetch_arc_articles()}
 
 
@@ -785,6 +788,18 @@ ARC_CACHE_TTL      = 1800          # 30 min article list cache
 ARC_QUESTIONS_TTL  = 86400         # 24 hr question cache per article
 ARC_TEXT_FOR_GEN   = 5000          # chars sent to Ollama for question gen
 ARC_TEXT_FOR_GRADE = 4000          # chars sent to Ollama per criterion
+
+# Vocabulary-quiz config (quiz_mode: vocab courses). Extraction is wordfreq
+# Zipf-banding + proper-noun filter; definitions come from a real dictionary
+# (NEVER the model — the model only selects words and sense-matches). See
+# _build_vocab_questions for the full pipeline.
+DICT_API_URL       = "https://api.dictionaryapi.dev/api/v2/entries/en"
+DICT_CACHE_TTL     = 30 * 86400    # 30 days — definitions don't change
+VOCAB_ZIPF_MIN     = 1.8           # below this: proper nouns / regional jargon
+VOCAB_ZIPF_MAX     = 3.0           # above this: too common to be worth teaching
+VOCAB_MIN_LEN      = 6             # skip short words
+VOCAB_SHORTLIST    = 14            # candidates handed to the model to pick from
+VOCAB_N            = 5             # words per quiz (matches the 5-item engine)
 
 
 def _fetch_arc_articles(limit: int = 24) -> list[dict]:
@@ -1169,10 +1184,188 @@ def get_dynamic_article(article_id: str):
     })
 
 
+# ---------------------------------------------------------------------------
+# Vocabulary quiz (quiz_mode: vocab) — a second quiz mode over the SAME dynamic
+# engine. It reuses the questions/submit/job/badge contract verbatim; only the
+# generator and grader differ. Item shape stays {question, criterion, ...} so
+# the existing ArticleTestClient renders it with no changes.
+#
+# Fabrication resistance (the whole point — proven necessary in discovery):
+#   - WORD CHOICE  : wordfreq Zipf-band + proper-noun filter (deterministic).
+#   - DEFINITIONS  : a real dictionary API is ground truth. The model NEVER
+#                    writes a definition; its only job is selecting which words
+#                    to teach and which dictionary SENSE matches the article's
+#                    sentence — both bounded, trustworthy.
+#   - SOURCE SENTENCE: quoted from the article, fabrication-proof by construction.
+#   - ETYMOLOGY    : deferred — no reliable free structured source; omitted
+#                    rather than fabricated.
+# ---------------------------------------------------------------------------
+_VOCAB_WORD_RE = re.compile(r"[A-Za-z][A-Za-z'\-]{2,}")
+_VOCAB_SENT_RE = re.compile(r"[^.!?]*[.!?]")
+
+
+def _course_quiz_mode(course_slug: str) -> str:
+    """'vocab' for a vocabulary course, 'comprehension' otherwise. Driven by the
+    registry `dynamic.quiz_mode` field so a new quiz type is still config-first."""
+    cfg = DYNAMIC_COURSE_CFG.get(course_slug) or {}
+    return (cfg.get("quiz_mode") or "comprehension").strip().lower()
+
+
+def _lookup_definition(word: str) -> dict | None:
+    """Ground-truth dictionary lookup (cached 30d). Returns
+    {word, pos, senses:[{pos, definition, example}]} or None if the word is not
+    a real dictionary entry — which auto-drops proper nouns/neologisms that the
+    frequency band let through (e.g. 'superintelligence' 404s and is excluded)."""
+    lw = word.lower()
+    cache_key = f"soc:vocab_def:{lw}"
+    cached = r.get(cache_key)
+    if cached is not None:
+        val = json.loads(cached)
+        return val or None  # cached "" (json null) marks a known miss
+    senses: list[dict] = []
+    try:
+        resp = http_requests.get(f"{DICT_API_URL}/{lw}", timeout=8)
+        if resp.status_code == 200:
+            for entry in resp.json():
+                for meaning in entry.get("meanings", []):
+                    pos = (meaning.get("partOfSpeech") or "").strip()
+                    for d in meaning.get("definitions", []):
+                        definition = (d.get("definition") or "").strip()
+                        if definition:
+                            senses.append({
+                                "pos":        pos,
+                                "definition": definition,
+                                "example":    (d.get("example") or "").strip(),
+                            })
+    except Exception as exc:
+        app.logger.warning(f"[vocab_def] {lw}: {exc}")
+        return None  # transient — don't poison the cache with a miss
+    result = {"word": lw, "pos": senses[0]["pos"] if senses else "", "senses": senses[:6]} if senses else None
+    r.set(cache_key, json.dumps(result or ""), ex=DICT_CACHE_TTL)
+    return result
+
+
+def _vocab_source_sentence(text: str, word: str) -> str:
+    """The article's own sentence containing the word — fabrication-proof context."""
+    lw = word.lower()
+    for sent in _VOCAB_SENT_RE.findall(text):
+        if re.search(rf"\b{re.escape(lw)}\b", sent, re.I):
+            return " ".join(sent.split())[:300]
+    return ""
+
+
+def _extract_vocab_candidates(text: str) -> list[dict]:
+    """Deterministic extraction: wordfreq Zipf-band + proper-noun filter +
+    min-length. Returns candidates [{word, source_sentence}] ranked hardest-first
+    (lowest Zipf), deduped. No model involved at this stage."""
+    from wordfreq import zipf_frequency
+    forms: dict[str, set[str]] = {}
+    for m in _VOCAB_WORD_RE.finditer(text):
+        w = m.group(0)
+        forms.setdefault(w.lower(), set()).add(w)
+    scored: list[tuple[str, float]] = []
+    for lw, surfaces in forms.items():
+        if len(lw) < VOCAB_MIN_LEN:
+            continue
+        if all(s[0].isupper() for s in surfaces):   # only ever capitalized → proper noun
+            continue
+        z = zipf_frequency(lw, "en")
+        if VOCAB_ZIPF_MIN <= z <= VOCAB_ZIPF_MAX:
+            scored.append((lw, z))
+    scored.sort(key=lambda x: x[1])  # rarest first
+    out = []
+    for lw, _z in scored[:VOCAB_SHORTLIST]:
+        out.append({"word": lw, "source_sentence": _vocab_source_sentence(text, lw)})
+    return out
+
+
+def _build_vocab_questions(article: dict) -> list[dict]:
+    """Assemble VOCAB_N quiz items from an article. Pipeline:
+       1. extract candidate words (deterministic, frequency band)
+       2. fetch each word's dictionary entry (ground truth; drops non-words)
+       3. ONE model call: pick the most teachable words + the sense index that
+          matches each word's article sentence (selection only — no definitions)
+       4. assemble {question, criterion, word, definition, example, source_sentence}
+    Returns [] if too few real words survive (caller falls back / errors)."""
+    text = (article.get("original_text") or "").strip()
+    candidates = _extract_vocab_candidates(text)
+    # Attach ground-truth dictionary entries; keep only real, defined words.
+    enriched = []
+    for c in candidates:
+        entry = _lookup_definition(c["word"])
+        if entry and entry.get("senses"):
+            enriched.append({**c, "entry": entry})
+    if len(enriched) < VOCAB_N:
+        return []
+
+    # One bounded model call: choose the 5 most teachable and the matching sense.
+    listing = []
+    for i, e in enumerate(enriched):
+        senses = "; ".join(f"[{j}] ({s['pos']}) {s['definition']}" for j, s in enumerate(e["entry"]["senses"]))
+        listing.append(f'{i}. "{e["word"]}" — sentence: "{e["source_sentence"]}"\n   senses: {senses}')
+    pick_prompt = (
+        "You are choosing vocabulary words to teach from a news article. Below are candidate "
+        "words, each with the sentence it appeared in and its dictionary senses.\n\n"
+        "Pick the " + str(VOCAB_N) + " words that are the most enriching/teachable for a curious adult "
+        "(skip dull or overly technical ones). For EACH chosen word, also give the index of the dictionary "
+        "sense that best matches how the word is used in its sentence.\n"
+        "Do NOT write your own definitions — only choose words and sense indices.\n\n"
+        "CANDIDATES:\n" + "\n".join(listing) + "\n\n"
+        'Return ONLY a JSON array of exactly ' + str(VOCAB_N) + ' objects: '
+        '[{"index": <candidate number>, "sense": <sense index>}]'
+    )
+    chosen: list[dict] = []
+    try:
+        raw, _ = _call_ollama(pick_prompt, timeout=90)
+        m = re.search(r"\[.*\]", raw, re.DOTALL)
+        picks = json.loads(m.group() if m else raw)
+        seen = set()
+        for p in picks:
+            i = int(p.get("index", -1))
+            s = int(p.get("sense", 0))
+            if 0 <= i < len(enriched) and i not in seen:
+                seen.add(i)
+                chosen.append({"cand": enriched[i], "sense": s})
+    except Exception as exc:
+        app.logger.warning(f"[vocab] model selection failed, using frequency order: {exc}")
+    # Fallback: rarest-first with the primary sense.
+    if len(chosen) < VOCAB_N:
+        have = {id(c["cand"]) for c in chosen}
+        for e in enriched:
+            if len(chosen) >= VOCAB_N:
+                break
+            if id(e) not in have:
+                chosen.append({"cand": e, "sense": 0})
+    chosen = chosen[:VOCAB_N]
+
+    items = []
+    for ch in chosen:
+        e = ch["cand"]
+        senses = e["entry"]["senses"]
+        sense = senses[ch["sense"]] if 0 <= ch["sense"] < len(senses) else senses[0]
+        word = e["word"]
+        definition = sense["definition"]
+        pos = sense["pos"]
+        sent = e["source_sentence"]
+        items.append({
+            "question": (f'Define the word “{word}” as it is used in this sentence from the '
+                         f'article:\n\n“{sent}”'),
+            "criterion": f'Answer conveys the meaning: "{definition}"' + (f" ({pos})" if pos else ""),
+            "word":            word,
+            "definition":      definition,
+            "part_of_speech":  pos,
+            "example":         sense.get("example", ""),
+            "source_sentence": sent,
+        })
+    return items
+
+
 @app.route("/api/dynamic/questions/<article_id>", methods=["POST"])
 def generate_dynamic_questions(article_id: str):
-    """Generate 5 comprehension questions. Cached per article for 24 hr."""
-    cache_key = f"soc:dynamic:questions:{article_id}"
+    """Generate 5 quiz items. Comprehension by default; a vocabulary quiz when
+    called with ?course=<a quiz_mode:vocab course>. Cached per article+mode 24 hr."""
+    quiz_mode = _course_quiz_mode(request.args.get("course", ""))
+    cache_key = f"soc:dynamic:questions:{quiz_mode}:{article_id}"
     cached = r.get(cache_key)
     if cached:
         return jsonify(json.loads(cached))
@@ -1182,6 +1375,19 @@ def generate_dynamic_questions(article_id: str):
         return jsonify({"error": "Article not found"}), 404
 
     title = (article.get("title") or "Untitled").strip()
+
+    if quiz_mode == "vocab":
+        try:
+            questions = _build_vocab_questions(article)
+        except Exception as exc:
+            app.logger.error(f"[vocab_questions] {article_id}: {exc}")
+            return jsonify({"error": f"Vocabulary extraction failed: {exc}"}), 500
+        if len(questions) < VOCAB_N:
+            return jsonify({"error": "Not enough teachable vocabulary in this article — pick another."}), 422
+        result = {"article_id": article_id, "title": title, "questions": questions}
+        r.set(cache_key, json.dumps(result), ex=ARC_QUESTIONS_TTL)
+        return jsonify(result)
+
     text  = (article.get("original_text") or "").strip()[:ARC_TEXT_FOR_GEN]
 
     # Propagate Arc's cloud circuit breaker — same Ollama instance, no point trying cloud if Arc tripped it
@@ -1241,12 +1447,15 @@ Example format:
 
 @app.route("/api/dynamic/submit", methods=["POST"])
 def submit_dynamic():
-    """Create a grading job for a dynamic reading-comprehension attempt."""
+    """Create a grading job for a dynamic quiz attempt (comprehension or vocab).
+    `course_slug` selects the quiz mode; vocab grades typed definitions against
+    the dictionary entry (carried in each item) instead of the article."""
     data       = request.get_json(force=True)
     article_id = data.get("article_id", "")
-    questions  = data.get("questions", [])    # list of {question, criterion}
+    questions  = data.get("questions", [])    # list of {question, criterion, ...}
     answers    = data.get("answers", [])
     user_id    = data.get("user_id", "anonymous")
+    quiz_mode  = _course_quiz_mode(data.get("course_slug", ""))
 
     if not article_id or len(questions) != 5 or len(answers) != 5:
         return jsonify({"error": "Requires article_id, 5 questions, 5 answers"}), 400
@@ -1281,7 +1490,7 @@ def submit_dynamic():
 
     threading.Thread(
         target=_grade_dynamic_job,
-        args=(job_id, article_id, article_title, article_text, questions, answers, user_id),
+        args=(job_id, article_id, article_title, article_text, questions, answers, user_id, quiz_mode),
         daemon=True,
     ).start()
 
@@ -1296,13 +1505,39 @@ def _grade_dynamic_job(
     questions: list[dict],
     answers: list[str],
     user_id: str,
+    quiz_mode: str = "comprehension",
 ) -> None:
-    """Sequential per-question grading with article as context."""
+    """Sequential per-item grading. Comprehension grades answers against the
+    article; vocab grades typed definitions against the DICTIONARY entry carried
+    on each item (the model never supplied the meaning). Vocab passes are stored
+    under a `vocab:` field prefix so they never collide with comprehension badges
+    for the same article."""
     for i, (q, answer) in enumerate(zip(questions, answers)):
         question_text = q.get("question", "")
         criterion     = q.get("criterion", "")
 
-        grade_prompt = f"""You are a reading comprehension instructor grading a student's answer.
+        if quiz_mode == "vocab":
+            word       = q.get("word", "")
+            definition = q.get("definition", "") or criterion
+            sentence   = q.get("source_sentence", "")
+            grade_prompt = f"""You are a vocabulary tutor grading whether a student correctly defined a word.
+
+WORD: {word}
+THE SENTENCE IT APPEARED IN: {sentence}
+CORRECT MEANING (authoritative dictionary definition — this is the source of truth): {definition}
+STUDENT'S DEFINITION: {answer}
+
+Award 0–20 points based ONLY on whether the student's definition matches the dictionary meaning above:
+- 20: correctly conveys the dictionary meaning (paraphrasing in their own words is fine)
+- 14–18: mostly correct, minor imprecision or vagueness
+- 8–12: partially correct, or the right general area but missing the core sense
+- 0–6: wrong, blank, a different word's meaning, or just repeats the word
+A correct general definition earns full marks — do NOT require article-specific detail.
+
+Return ONLY valid JSON (no markdown, no extra text):
+{{"earned": <integer 0–20>, "comment": "<one sentence explaining the score>"}}"""
+        else:
+            grade_prompt = f"""You are a reading comprehension instructor grading a student's answer.
 
 ARTICLE TITLE: {article_title}
 ARTICLE (excerpt — use this as the source of truth):
@@ -1350,10 +1585,13 @@ Return ONLY valid JSON (no markdown, no extra text):
             if user_id != "anonymous":
                 pct = round((job["total_earned"] / 100) * 100)
                 if pct >= 70:
-                    # Store article pass: hash field = article_id, value = JSON
+                    # Store article pass: hash field = article_id (vocab passes are
+                    # prefixed so they never collide with a comprehension badge for
+                    # the same article), value = JSON.
+                    pass_field = f"vocab:{article_id}" if quiz_mode == "vocab" else article_id
                     r.hset(
                         f"soc:dynamic_pass:{user_id}",
-                        article_id,
+                        pass_field,
                         json.dumps({"score": job["total_earned"], "title": article_title, "pct": pct}),
                     )
 

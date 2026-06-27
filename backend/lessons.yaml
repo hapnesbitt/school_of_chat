@@ -6226,3 +6226,75 @@ courses:
         questions test what the piece reported, never what you should do for your
         own health; for medical decisions, talk to a clinician.
     lessons: []
+
+  # ============================================================
+  # COURSE 25 — Vocabulary Daily (dynamic, NEW quiz_mode: vocab)
+  # ============================================================
+  # A SECOND quiz mode over the same dynamic engine — it does NOT test
+  # comprehension of one article; it teaches the hardest/most interesting
+  # VOCABULARY from a recent article, then quizzes the words (define-in-context).
+  # Reuses the questions/submit/job/badge/cert/UI contract verbatim; only the
+  # generator and grader differ, both selected by `quiz_mode: vocab` below.
+  #
+  # FABRICATION RESISTANCE (the whole reason this was a discovery-first build —
+  # the model fabricated a definition for a fake word and mis-defined a real one):
+  #   - WORD CHOICE   : deterministic wordfreq Zipf-band (~1.8–3.0) + proper-noun
+  #                     filter + min-length. Excludes common words, proper nouns,
+  #                     and brand/jargon-of-the-day in one pass.
+  #   - DEFINITIONS   : a real dictionary API is the source of truth. The model
+  #                     NEVER writes a definition — it only (a) picks which words
+  #                     are most teachable and (b) sense-matches the dictionary
+  #                     entry to the article's sentence. Both bounded/trustworthy.
+  #                     Words with no dictionary entry are dropped automatically.
+  #   - SOURCE SENTENCE: quoted from the article — fabrication-proof by construction.
+  #   - ETYMOLOGY     : DEFERRED. No reliable free structured source; a wrong
+  #                     etymology reintroduces the exact fabrication risk we avoid,
+  #                     so v1 omits it rather than guessing.
+  #
+  # SCOPING: per-article, reusing the article-scoped badge. Vocab passes are
+  # stored under a `vocab:` field prefix (see _grade_dynamic_job) so a vocab badge
+  # requires a vocab pass and never collides with a comprehension badge on the
+  # same article. No "every-N-stories" trigger — the window already supplies the
+  # daily rotation. Selector is `none` (any recent article has rich-enough text;
+  # the generator returns 422 "pick another" if a given piece is too thin).
+  - slug: vocabulary-daily
+    title: "Vocabulary Daily"
+    tagline: "Learn the sharpest words from today's news — define them, in context."
+    description: >
+      Each day, pick a recent article and learn its most interesting vocabulary.
+      We surface the hardest words, show you the sentence each appeared in, and
+      ask you to define them. Your answer is graded against a real dictionary —
+      not a guess from an AI. Earn a comprehension badge for every set you pass.
+      Self-study to grow your vocabulary from real writing — not a credential.
+    icon: "📖"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    article_source: arc-vocab
+    card:
+      order: 180
+      tagline: "Learn the sharpest words from today's news — define them, in context"
+      description: >
+        Pick a recent article and learn its most interesting words. We show you
+        each word in the sentence it appeared in and ask you to define it; your
+        answer is graded against a real dictionary, never an AI's guess. Earn a
+        badge for every set you pass. Self-study to grow your vocabulary from
+        real writing — not a credential.
+    dynamic:
+      source: arc
+      quiz_mode: vocab
+      selector:
+        type: none
+      fetch_window: 60
+      cache_version: 1
+      header_label: "Today's words"
+      cta_label: "Learn the words →"
+      how_it_works: >
+        Pick a recent article from the Arc Codex feed. We extract its five most
+        interesting vocabulary words using a word-frequency filter (no proper
+        nouns, no boring long words), show you the sentence each appeared in, and
+        ask you to define them in your own words. Your answers are graded against
+        a real dictionary definition — the meaning is never invented by an AI, so
+        a wrong definition can't slip through. Pass at 70%+ to log a badge with
+        your name on it. Self-study to grow your vocabulary — not a credential.
+    lessons: []
