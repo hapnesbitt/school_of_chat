@@ -6155,3 +6155,74 @@ courses:
         position on any belief. The questions test what the piece reported,
         never whether it's true or which tradition is right.
     lessons: []
+
+  # ============================================================
+  # COURSE 24 — Health Daily (dynamic, arc-codex health, comprehension)
+  # ============================================================
+  # Self-study reading log on health and medicine in the news — public
+  # health, medical research, drugs and the FDA, hospitals and care policy,
+  # outbreaks and epidemiology. Same engine as financial-daily, new-machine
+  # and religion-daily: a single pass at 70%+ on an article mints a per-
+  # article comprehension badge with the user's Google name on it.
+  #
+  # SELECTION NOTE: like new-machine and religion-daily (and unlike finance's
+  # clean economic_finance category), health does NOT map to a usable arc-codex
+  # category or directive. The `science_health` category (~4.6%) BUNDLES general
+  # science + psychology + health, and the editorial "Healthcare and Public
+  # Health" directive is only ~1.4% — real health pieces scatter across ~10
+  # directives (Crisis Monitoring, Legal, Economic Policy, AI, Consumer Tech,
+  # Government Actions, ...). So article_source 'arc-health' is backed by a
+  # precision-first KEYWORD CLASSIFIER, not a category filter. Measured ~6.6% of
+  # the 500-window corpus at this pattern (same volume tier as new-machine's
+  # ~6.6%, ~3x religion's ~2.4%) — abundant enough for a daily.
+  #
+  # COMPREHENSION-NOT-ADVICE GUARDRAIL: questions and grading test comprehension
+  # of the SOURCE ARTICLE only — "what did this piece report/claim" — NEVER
+  # medical advice, dosage, diagnosis, treatment recommendations, or "what you
+  # should do." Same fabrication-proof mechanic as the other dynamic courses;
+  # the grader rewards accurate restatement of the source, not health guidance.
+  # NOT a credential, NOT medical advice — copy on the course page and category
+  # card states this explicitly.
+  - slug: health-daily
+    title: "Health Daily"
+    tagline: "Daily readings on health in the news — medicine, public health, research, and care."
+    description: >
+      Each day, pick an article on health or medicine in the news and answer
+      five open-response questions on what it actually said. The grader has the
+      article — general knowledge alone won't be enough. Earn a comprehension
+      badge for every article you pass. Self-study to read health journalism
+      carefully — not a credential, and not medical advice. Questions test what
+      the piece reported, never what you should do for your own health.
+    icon: "🩺"
+    tier: 1
+    difficulty: beginner
+    lesson_type: dynamic
+    article_source: arc-health
+    card:
+      order: 170
+      tagline: "Daily readings on health in the news — medicine, public health, research, and care"
+      description: >
+        Pick a health or medicine article from the Arc Codex feed and answer five
+        typed questions on it. The grader has the article — general knowledge won't
+        be enough. Comprehension badges with your name on them, one per article. The
+        questions test what the piece reported, never what you should do — this is
+        reading practice, not medical advice or a credential.
+    dynamic:
+      source: arc
+      selector:
+        type: classifier
+        pattern: '(\bhealth\b|healthcare|health care|public health|mental health|\bmedical\b|\bmedicine\b|\bdisease|\bvaccin|\bvaccines?\b|\bhospital(?:s|ized|ization)?\b|\bpatients?\b|\bdoctors?\b|physician|\bclinic(?:s|al)?\b|\bdrug\b|\bdrugs\b|\bFDA\b|pharmaceutic|\bcancer\b|\bdiabetes\b|\bsurgery\b|\bsurgical\b|\bnurses?\b|\bepidemic|\bpandemic|\bvirus\b|\binfection|\bobesity\b|\btherap(?:y|ies|eutic)|\bdementia\b|alzheimer|\bopioids?\b|prescription|\bEbola\b|\bmedicaid\b|\bmedicare\b|\babortion|\bmeasles\b|world health organization|\bmaternal\b|\bfentanyl\b|\bdiagnos)'
+        title_anchor: true
+        body_min_distinct: 3
+      fetch_window: 250
+      cache_version: 1
+      header_label: "Today's readings"
+      how_it_works: >
+        Pick a health or medicine article from today's Arc Codex feed and read it.
+        Answer five open-response questions on what it actually said. Pass at 70%+ to
+        log a comprehension badge with your name on it. The grader has the article —
+        general knowledge alone won't be enough. This is self-study to read health
+        journalism carefully — not a credential, and not medical advice. The
+        questions test what the piece reported, never what you should do for your
+        own health; for medical decisions, talk to a clinician.
+    lessons: []
